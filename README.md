@@ -1,16 +1,23 @@
 # Temporal Metrics Troubleshooting Knowledge Base
 
-This repository is the main hub for creating a knowledge base for learning how to troubleshoot Temporal SDK and Server/Cloud metrics.
+Everything in this repository comes from 5+ years of hands-on experience with Temporal — across hundreds of implementations, from small services to large-scale, mission-critical systems. This is not documentation. It's not a summary of what's already written somewhere else. It's the knowledge I've built up personally, through real production incidents, load tests, and hard-won debugging sessions.
 
-It contains knowledge based entirely on my own experience, gathered over 5+ years of working extensively with Temporal across hundreds of use cases — ranging from small implementations to large-scale, mission-critical systems. All content here is derived from my firsthand experience and not sourced from external documentation.
+If you're here to understand what a metric actually means when things are going sideways, you're in the right place.
 
-This is not just a list of metrics. It is a comprehensive guide for interpreting Temporal metrics, specifically designed to help troubleshoot real production issues. It can also be used for cluster and database sizing, as well as during load testing to better understand system behavior under stress.
+---
 
-One of the core strengths of this knowledge base is that it not only explains individual metrics, but also guides users across related metrics to build a complete understanding of issues, system performance, and how to approach troubleshooting effectively.
+This isn't a metrics glossary. It's a troubleshooting guide built around how problems actually present themselves in production. A few things that make it different:
 
-This knowledge base can also be used as a Claude skill and is a work in progress that will continue to expand over time.
+- **It connects the dots.** Rather than explaining metrics in isolation, it guides you across related signals so you can build a complete picture of what's happening — not just identify a single data point.
+- **It covers real impact.** Every entry is grounded in what the failure actually means for your system and your users, not just what the metric technically represents.
+- **It's practical beyond incidents.** The same knowledge applies to cluster and database sizing, capacity planning, and understanding system behavior under load testing.
+- **It works as a Claude skill.** The content is structured to be used directly with Claude for interactive troubleshooting.
 
-You can also find useful dashboards to use alongside this knowledge base here:
+This is a living document. It will keep growing as I work through new patterns and scenarios.
+
+---
+
+Useful dashboards to use alongside this knowledge base:
 - https://github.com/tsurdilo/my-temporal-dockercompose
 - https://github.com/tsurdilo/my-temporal-dockercompose/tree/main/deployment/grafana/dashboards
 
