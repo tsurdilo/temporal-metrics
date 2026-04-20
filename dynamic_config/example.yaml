@@ -1,0 +1,122 @@
+#frontend
+frontend.rps:
+  - value: 2400
+frontend.namespaceRPS:
+  - value: 2400
+frontend.globalNamespaceRPS:
+  - value: 1600
+frontend.globalRPS:
+  - value: 6000
+frontend.persistenceMaxQPS:
+  - value: 2400
+frontend.persistenceGlobalMaxQPS:
+  - value: 0
+frontend.namespaceCount:
+  - value: 2000
+frontend.globalNamespaceCount:
+  - value: 20000
+frontend.namespaceRPS.visibility:
+  - value: 50
+frontend.globalNamespaceRPS.visibility:
+  - value: 500
+frontend.visibilityArchivalQueryMaxPageSize:
+  - value: 10000
+frontend.MaxConcurrentBatchOperationPerNamespace:
+  - value: 1
+frontend.WorkerHeartbeatsEnabled:
+  - value: true
+frontend.ListWorkersEnabled:
+  - value: true
+frontend.WorkerCommandsEnabled:
+  - value: true
+frontend.keepAliveMinTime:
+  - value: 10s
+frontend.keepAlivePermitWithoutStream:
+  - value: true
+# history
+history.rps:
+  - value: 3000
+history.cacheSizeBasedLimit:
+  - value: true
+history.hostLevelCacheMaxSizeBytes:
+  - value: 100000000
+history.cacheMaxSizeBytes:
+  - value: 2000000
+history.persistenceGlobalMaxQPS:
+  - value: 36000
+history.persistenceMaxQPS:
+  - value: 16000
+history.persistencePerShardNamespaceMaxQPS:
+  - value: 500
+history.shardIOConcurrency:
+  - value: 1
+history.MaxBufferedQueryCount:
+  - value: 1
+#history.enableWorkflowIdReuseStartTimeValidation:
+#  - value: true
+## optional - can discuss
+#history.cacheBackgroundEvict:
+#  - value:
+#      Enabled: true
+#      LoopInterval: 1m
+#      MaxEntryPerCall: 1024
+#    constraints: {}
+#matching
+matching.rps:
+  - value: 1200
+matching.numTaskqueueReadPartitions:
+  - value: 4
+    constraints: {}
+    ## this is example for changing for specific tq
+  - value: 1
+    constraints: {
+      namespace: 'default',
+      taskQueueName: 'priority-tq'
+    }
+matching.outstandingTaskAppendsThreshold:
+  - value: 500
+matching.numTaskqueueWritePartitions:
+  - value: 4
+    constraints: {}
+    ## this is example for changing for specific tq
+  - value: 1
+    constraints: {
+      namespace: 'default',
+      taskQueueName: 'priority-tq'
+    }
+matching.persistenceMaxQPS:
+  - value: 2400
+matching.priorityLevels:
+  - value: 10
+matching.enableFairness:
+  - value: true
+    constraints: {
+      namespace: 'default',
+      taskQueueName: 'priority-tq'
+    }
+#worker
+# depends on if schedules used and num of worker pods
+# can discuss
+worker.schedulerNamespaceStartWorkflowRPS:
+  - value: 100
+worker.perNamespaceWorkerOptions:
+  - value:
+      MaxConcurrentWorkflowTaskPollers: 25
+      MaxConcurrentActivityTaskPollers: 10
+worker.perNamespaceWorkerCount:
+  - value: 4
+worker.batcherRPS:
+  - value: 50
+worker.batcherConcurrency:
+  - value: 5
+#system
+## dial visibility
+system.secondaryVisibilityWritingMode:
+  - value: "dual"
+    constraints: {}
+system.enableReadFromSecondaryVisibility:
+  - value: false
+    constraints: {}
+# optional
+#system.enableDataLossMetrics:
+#  - value: true

@@ -23,4 +23,4 @@ Useful dashboards to use alongside this knowledge base:
 
 ## Table of Contents
 
-1. [Troubleshooting SDK Request Failure Metrics](./SDK_METRICS_REQUEST_FAILURES.md)
+1. [Troubleshooting SDK Request Failure Metrics](SDK_METRICS_REQUEST_FAILURES.md)
