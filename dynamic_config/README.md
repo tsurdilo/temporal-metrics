@@ -9,6 +9,7 @@
     - [History](#history)
     - [Matching](#matching)
     - [Worker](#worker)
+- [Dynamic Configs for Different Limits](#dynamic-configs-for-different-limits)
 - [All Available Configs](#all-available-configs)
     - [Frontend](#frontend-1)
     - [History](#history-1)
@@ -75,6 +76,106 @@ These are the configs you should review and consciously set (or decide to leave 
 | `worker.perNamespaceWorkerOptions` | — | `MaxConcurrentWorkflowTaskPollers: 25, MaxConcurrentActivityTaskPollers: 10` | SDK worker options for per-namespace workers. Rule of thumb: 1 workflow task poller per 4 schedule RPS desired. |
 
 ---
+
+# Dynamic Configs for Different Limits
+
+## Signals
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.numPendingSignals.error` | Max pending signals before `SignalExternalWorkflowExecution` commands fail | 2000 |
+| `history.maximumSignalsPerExecution` | Max total signals ever received by a single execution | 10000 |
+
+---
+
+## Activities
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.numPendingActivities.error` | Max pending activities before `ScheduleActivityTask` fails | 2000 |
+| `limit.mutableStateActivityFailureSize.error` | Max per-activity failure size stored in mutable state | 4KB |
+| `limit.mutableStateActivityFailureSize.warn` | Warning threshold for per-activity failure size | 2KB |
+
+---
+
+## Child Workflows
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.numPendingChildExecutions.error` | Max pending child workflows before `StartChildWorkflowExecution` commands fail | 2000 |
+
+---
+
+## Cancel Requests
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.numPendingCancelRequests.error` | Max pending cancel requests to other workflows before `RequestCancelExternalWorkflowExecution` commands fail | 2000 |
+
+---
+
+## Updates
+
+| Config Key | Description | Default |
+|---|---|---|
+| `history.maxInFlightUpdates` | Max in-flight (admitted but not completed) updates at once | 10 |
+| `history.maxInFlightUpdatePayloads` | Max total payload size of in-flight updates in bytes | 20MB |
+| `history.maxTotalUpdates` | Max total updates a workflow can ever receive | 2000 |
+| `history.maxTotalUpdates.suggestContinueAsNewThreshold` | % of total updates limit before continue-as-new is suggested | 0.9 (90%) |
+
+---
+
+## History Size / Event Count
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.historySize.error` | Max history size in bytes before failing | 50MB |
+| `limit.historySize.warn` | Warning threshold for history size | 10MB |
+| `limit.historySize.suggestContinueAsNew` | History size at which continue-as-new is suggested | 4MB |
+| `limit.historyCount.error` | Max history event count before failing | 50,000 |
+| `limit.historyCount.warn` | Warning threshold for history event count | 10,000 |
+| `limit.historyCount.suggestContinueAsNew` | Event count at which continue-as-new is suggested | 4,000 |
+
+---
+
+## Mutable State
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.mutableStateSize.error` | Max mutable state size in bytes before failing | 8MB |
+| `limit.mutableStateSize.warn` | Warning threshold for mutable state size | 1MB |
+| `limit.mutableStateTombstoneCountLimit` | Max deleted sub state machines tracked in mutable state | 16 |
+
+---
+
+## Payload / Blob
+
+| Config Key | Description | Default |
+|---|---|---|
+| `limit.blobSize.error` | Max per-event blob size | 2MB |
+| `limit.blobSize.warn` | Warning threshold for per-event blob size | 512KB |
+| `limit.memoSize.error` | Max memo size | 2MB |
+| `limit.memoSize.warn` | Warning threshold for memo size | 2KB |
+
+---
+
+## Buffered Events
+
+| Config Key | Description | Default |
+|---|---|---|
+| `history.maximumBufferedEventsBatch` | Max number of buffered events in mutable state | 100 |
+| `history.maximumBufferedEventsSizeInBytes` | Max total size of all buffered events | 2MB |
+
+---
+
+## Miscellaneous
+
+| Config Key | Description | Default |
+|---|---|---|
+| `history.MaxBufferedQueryCount` | Max buffered queries | 1 |
+| `history.historyMaxAutoResetPoints` | Max auto reset points stored in mutable state | primitives constant |
+| `history.workflowTaskHeartbeatTimeout` | Workflow task heartbeat timeout | 30min |
+
 
 ## All Available Configs
 
