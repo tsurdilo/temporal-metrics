@@ -16,7 +16,6 @@ Histogram metrics in the Go SDK are measured in **seconds**.
 - [Nexus Task Metrics](#nexus-task-metrics)
 - [Signal Metrics](#signal-metrics)
 - [Metric Tags Reference](#metric-tags-reference)
-- [Notes](#notes)
 - [Go SDK vs Java SDK Differences](#go-sdk-vs-java-sdk-differences)
 - [Go SDK vs Core SDK Differences](#go-sdk-vs-core-sdk-differences)
 
@@ -224,18 +223,6 @@ Go SDK specific (also available in Java SDK).
 | Local activity deprecated aliases | `local_activity_total`, `local_activity_failed`, `local_activity_canceled` still emitted | Not present |
 | Nexus endtoend latency | `temporal_nexus_task_endtoend_latency` present | Not present |
 | `cause` tag | Present | Not present |
-
----
-
-## Notes
-
-- **`temporal_long_request` vs `temporal_request`:** Poll operations (`PollWorkflowTaskQueue`, `PollActivityTaskQueue`, `PollNexusTaskQueue`) emit under `temporal_long_request_*`. All other RPC calls use `temporal_request_*`.
-- **`temporal_sticky_cache_miss`** means the worker must replay the full workflow history from scratch. High miss rates indicate cache eviction pressure — tune `WorkerOptions.MaxWorkflowExecutionCacheSize`.
-- **`temporal_workflow_task_schedule_to_start_latency`** is the primary signal for workflow worker capacity. P95 above ~1 second indicates task queue backlog.
-- **`temporal_activity_schedule_to_start_latency`** is the activity equivalent — high values mean activity workers cannot keep up.
-- **`temporal_workflow_task_replay_latency`** is Go-specific and measures just the replay portion of a workflow task. High values here indicate large or expensive history replay.
-- **`temporal_corrupted_signals`** fires when a signal payload cannot be deserialized — typically a schema mismatch between signal sender and workflow definition.
-- Some SDKs may emit additional metrics beyond this list. Only metrics in the [official SDK metrics reference](https://docs.temporal.io/references/sdk-metrics) have guaranteed, defined behavior.
 
 ---
 

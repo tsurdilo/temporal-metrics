@@ -18,7 +18,6 @@ Metrics defined here are emitted by all of those SDKs identically.
 - [Nexus Task Metrics](#nexus-task-metrics)
 - [Resource-Based Tuner Metrics](#resource-based-tuner-metrics)
 - [Metric Tags Reference](#metric-tags-reference)
-- [Notes](#notes)
 - [Core SDK vs Java/Go SDK Differences](#core-sdk-vs-javago-sdk-differences)
 
 ---
@@ -213,16 +212,3 @@ The resource-based tuner exposes CPU and memory utilization through the metrics 
 | `status_code` tag format | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` | PascalCase e.g. `FailedPrecondition` |
 | `workflow_active_thread_count` gauge | Not present | Present (JVM threads) | Present (goroutines) |
 | Local activity `worker_type` value | Not a separate value | `LocalActivityWorker` | `LocalActivityWorker` |
-
----
-
-## Notes
-
-- **Histogram unit is configurable.** Core-based SDKs default to milliseconds but can be configured to emit seconds. Check the SDK-specific runtime/telemetry configuration docs for your language.
-- **`temporal_sticky_cache_miss`** means the worker performed a full history replay. High miss rates indicate cache size pressure — tune the workflow cache size in your worker options.
-- **`temporal_workflow_task_schedule_to_start_latency`** is the primary signal for workflow worker capacity. P95 above ~1 second indicates task queue backlog.
-- **`temporal_activity_schedule_to_start_latency`** is the activity equivalent — high values mean activity workers cannot keep up.
-- **`temporal_workflow_task_replay_latency`** measures only the replay portion of a workflow task. High values indicate large or complex histories that take a long time to replay.
-- **`temporal_activity_task_received`** is unique to Core SDK — it records when Core hands an activity task to the language layer, before execution begins. Comparing it to `temporal_activity_schedule_to_start_latency` can reveal queuing within the language runtime itself.
-- **gRPC `status_code` tag** uses SCREAMING_SNAKE_CASE matching the gRPC spec (e.g. `FAILED_PRECONDITION`, not `FailedPrecondition`).
-- Some SDKs may emit additional metrics beyond this list. Only metrics in the [official SDK metrics reference](https://docs.temporal.io/references/sdk-metrics) have guaranteed, defined behavior.

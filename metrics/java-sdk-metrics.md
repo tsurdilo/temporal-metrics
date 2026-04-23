@@ -16,7 +16,6 @@ Histogram metrics in the Java SDK are measured in **seconds**.
 - [Local Activity Metrics](#local-activity-metrics)
 - [Nexus Task Metrics](#nexus-task-metrics)
 - [Metric Tags Reference](#metric-tags-reference)
-- [Notes](#notes)
 - [Prometheus Naming: The `_seconds` Suffix](#prometheus-naming-the-_seconds-suffix)
 - [Java SDK vs Go SDK Differences](#java-sdk-vs-go-sdk-differences)
 - [Java SDK vs Core SDK Differences](#java-sdk-vs-core-sdk-differences)
@@ -203,17 +202,6 @@ Java SDK specific (also available in Go SDK).
 | `operation` | gRPC RPC method name | `PollWorkflowTaskQueue`, `RespondWorkflowTaskCompleted` |
 | `failure_reason` | Reason for task execution failure | `NonDeterminismError`, `WorkflowError` |
 | `status_code` | gRPC status code on request failure (SCREAMING_SNAKE_CASE) | `FAILED_PRECONDITION`, `UNAVAILABLE` |
-
----
-
-## Notes
-
-- **Histogram unit:** Java SDK histograms are measured in **seconds** (unlike Core-based SDKs which use milliseconds by default).
-- **`temporal_long_request` vs `temporal_request`:** Poll operations (`PollWorkflowTaskQueue`, `PollActivityTaskQueue`) are tracked under `temporal_long_request_*`. All other RPC calls use `temporal_request_*`.
-- **`temporal_sticky_cache_miss`** is a strong signal that workers are doing full history replay, which is expensive. High miss rates indicate cache eviction pressure — consider tuning `workflowCacheSize` in `WorkerFactoryOptions`.
-- **`temporal_workflow_task_schedule_to_start_latency`** is the primary signal for worker capacity issues. P95 above ~1 second indicates the task queue is backing up.
-- **`temporal_activity_schedule_to_start_latency`** is the activity equivalent — high values mean activity workers are not keeping up with the task queue.
-- Some SDKs may emit additional metrics beyond this list. Only metrics in the [official SDK metrics reference](https://docs.temporal.io/references/sdk-metrics) have guaranteed, defined behavior.
 
 ---
 
