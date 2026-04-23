@@ -26,7 +26,17 @@ Defined in `temporal-serviceclient/MetricsType.java`.
 | `temporal_long_request_failure` | Counter | Failed long-poll requests |
 | `temporal_long_request_latency` | Histogram | Latency of long-poll requests |
 
-**Tags:** `operation` (RPC method name e.g. `PollWorkflowTaskQueue`), `namespace`, `task_queue`
+**Tags:** `operation` (RPC method name e.g. `PollWorkflowTaskQueue`), `namespace`, `task_queue`, `status_code` (on failure)
+
+---
+
+## Signal Metrics
+
+| Metric | Type | Description |
+|---|---|---|
+| `temporal_corrupted_signals` | Counter | Signals received that could not be deserialized |
+
+**Tags:** `workflow_type`, `namespace`, `task_queue`
 
 ---
 
@@ -37,8 +47,12 @@ Defined in `temporal-serviceclient/MetricsType.java`.
 | `temporal_worker_start` | Counter | Emitted once when a worker is started |
 | `temporal_worker_task_slots_available` | Gauge | Number of execution slots currently available |
 | `temporal_worker_task_slots_used` | Gauge | Number of execution slots currently in use |
+| `temporal_poller_start` | Counter | Emitted each time a poller thread starts |
+| `temporal_num_pollers` | Gauge | Current number of active pollers |
 
 **Tags:** `worker_type` (`WorkflowWorker`, `ActivityWorker`, `LocalActivityWorker`, `NexusWorker`), `namespace`, `task_queue`
+
+`temporal_poller_start` and `temporal_num_pollers` also carry a `poller_type` tag.
 
 ---
 
@@ -53,6 +67,7 @@ Emitted by `WorkflowWorker` during workflow task polling and execution.
 | `temporal_workflow_task_schedule_to_start_latency` | Histogram | Time from task scheduled on server to worker picking it up |
 | `temporal_workflow_task_execution_latency` | Histogram | Time to execute a single workflow task |
 | `temporal_workflow_task_execution_total_latency` | Histogram | Total time including workflow run lock wait |
+| `temporal_workflow_task_replay_latency` | Histogram | Time spent replaying history during a workflow task |
 | `temporal_workflow_task_execution_failed` | Counter | Workflow task execution failed |
 | `temporal_workflow_task_no_completion` | Counter | Task was processed but no completion was sent to the server |
 
@@ -167,6 +182,7 @@ Java SDK specific (also available in Go SDK).
 | `poller_type` | Type of poller | `workflow_task`, `activity_task`, `nexus_task`, `sticky_workflow_task` |
 | `operation` | gRPC RPC method name | `PollWorkflowTaskQueue`, `RespondWorkflowTaskCompleted` |
 | `failure_reason` | Reason for task execution failure | `NonDeterminismError`, `WorkflowError` |
+| `status_code` | gRPC status code on request failure (SCREAMING_SNAKE_CASE) | `FAILED_PRECONDITION`, `UNAVAILABLE` |
 
 ---
 
@@ -187,15 +203,10 @@ Java SDK specific (also available in Go SDK).
 |---|---|---|
 | Workflow canceled spelling | `temporal_workflow_cancelled` (two `l`s) | `temporal_workflow_canceled` (one `l`) |
 | `workflow_task_execution_total_latency` | Present (includes workflow run lock wait time) | Not present |
-| `workflow_task_replay_latency` | Not present | Present |
-| `num_pollers` gauge | Not present | Present |
-| `poller_start` counter | Not present | Present |
 | `activity_execution_cancelled` counter | Present | Not present |
 | `activity_task_error` counter | Not present | Present |
 | Local activity deprecated aliases | Not present | `local_activity_total`, `local_activity_failed`, `local_activity_canceled` still emitted |
 | Nexus endtoend latency | Not present | `temporal_nexus_task_endtoend_latency` present |
-| `corrupted_signals` counter | Not present | Present |
-| `status_code` tag on request failure | Not present | Present |
 | `cause` tag | Not present | Present |
 
 ---
@@ -211,10 +222,8 @@ The Core SDK powers TypeScript, Python, .NET, and Ruby. Use this table when buil
 | `activity_task_received` counter | Not present | Present |
 | `activity_execution_cancelled` counter | Present | Not present |
 | `workflow_task_execution_total_latency` | Present (includes workflow run lock wait) | Not present |
-| `workflow_task_replay_latency` | Not present | Present |
 | `workflow_task_no_completion` counter | Present | Not present |
-| `num_pollers` gauge | Not present | Present |
 | `local_activity_total` counter | Not present | Present |
 | Nexus execution metric naming | `temporal_nexus_execution_latency` / `temporal_nexus_execution_failed` | `temporal_nexus_task_execution_latency` / `temporal_nexus_task_execution_failed` |
-| `status_code` tag on request failure | Not present | Present (SCREAMING_SNAKE_CASE) |
 | `workflow_active_thread_count` gauge | Present (JVM thread count) | Not present |
+| `cause` tag | Not present | Present |

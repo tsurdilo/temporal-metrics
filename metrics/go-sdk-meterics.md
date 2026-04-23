@@ -199,16 +199,11 @@ Go SDK specific (also available in Java SDK).
 | Area | Go SDK | Java SDK |
 |---|---|---|
 | Workflow canceled spelling | `temporal_workflow_canceled` (one `l`) | `temporal_workflow_cancelled` (two `l`s) |
-| `workflow_task_replay_latency` | Present | Not present |
 | `workflow_task_execution_total_latency` | Not present | Present (includes workflow run lock wait time) |
-| `num_pollers` gauge | Present | Not present |
-| `poller_start` counter | Present | Not present |
 | `activity_execution_cancelled` counter | Not present | Present |
 | `activity_task_error` counter | Present | Not present |
 | Local activity deprecated aliases | `local_activity_total`, `local_activity_failed`, `local_activity_canceled` still emitted | Not present |
 | Nexus endtoend latency | `temporal_nexus_task_endtoend_latency` present | Not present |
-| `corrupted_signals` counter | Present | Not present |
-| `status_code` tag on request failure | Present | Not present |
 | `cause` tag | Present | Not present |
 
 ---
@@ -239,6 +234,6 @@ The Core SDK powers TypeScript, Python, .NET, and Ruby. Use this table when buil
 | `poller_start` counter | Present | Not present |
 | Local activity deprecated aliases | `local_activity_failed`, `local_activity_canceled` still emitted | Not emitted |
 | Nexus execution metric naming | `temporal_nexus_execution_latency` / `temporal_nexus_execution_failed` | `temporal_nexus_task_execution_latency` / `temporal_nexus_task_execution_failed` |
-| `status_code` tag format | PascalCase e.g. `FailedPrecondition` | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` |
+| `status_code` tag format | PascalCase e.g. `FailedPrecondition` | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` — **different format** |
 | `workflow_active_thread_count` gauge | Present (goroutine count) | Not present |
 | `client_name` tag value | `temporal_go` | SDK-specific per language bridge |

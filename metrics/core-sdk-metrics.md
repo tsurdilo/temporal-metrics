@@ -190,14 +190,10 @@ The resource-based tuner exposes CPU and memory utilization through the metrics 
 | `activity_execution_cancelled` counter | Not present | Present | Not present |
 | `workflow_task_execution_total_latency` | Not present | Present | Not present |
 | `workflow_task_no_completion` counter | Not present | Present | Present |
-| `workflow_task_replay_latency` | Present | Not present | Present |
-| `num_pollers` gauge | Present | Not present | Present |
-| `poller_start` counter | Not present | Not present | Present |
-| `corrupted_signals` counter | Not present | Not present | Present |
 | `local_activity_total` counter | Present | Not present | Present (deprecated alias) |
 | Workflow canceled spelling | `temporal_workflow_canceled` (one `l`) | `temporal_workflow_cancelled` (two `l`s) | `temporal_workflow_canceled` (one `l`) |
 | Nexus execution metric naming | `temporal_nexus_task_execution_latency` / `temporal_nexus_task_execution_failed` | `temporal_nexus_execution_latency` / `temporal_nexus_execution_failed` | `temporal_nexus_execution_latency` / `temporal_nexus_execution_failed` |
-| `status_code` tag format | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` | Not present | PascalCase e.g. `FailedPrecondition` |
+| `status_code` tag format | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` | SCREAMING_SNAKE_CASE e.g. `FAILED_PRECONDITION` | PascalCase e.g. `FailedPrecondition` |
 | `workflow_active_thread_count` gauge | Not present | Present (JVM threads) | Present (goroutines) |
 | Local activity `worker_type` value | Not a separate value | `LocalActivityWorker` | `LocalActivityWorker` |
 
