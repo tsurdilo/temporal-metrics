@@ -1,0 +1,592 @@
+{
+  "__inputs":[
+    {"name":"DS_PROMETHEUS","label":"Prometheus","description":"","type":"datasource","pluginId":"prometheus","pluginName":"Prometheus"}
+  ],
+  "__requires":[
+    {"type":"grafana","id":"grafana","name":"Grafana","version":"9.0.0"},
+    {"type":"datasource","id":"prometheus","name":"Prometheus","version":"1.0.0"},
+    {"type":"panel","id":"timeseries","name":"Time series","version":""},
+    {"type":"panel","id":"stat","name":"Stat","version":""},
+    {"type":"panel","id":"gauge","name":"Gauge","version":""},
+    {"type":"panel","id":"text","name":"Text","version":""}
+  ],
+  "annotations":{"list":[
+    {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"enable":true,"expr":"increase(restarts{}[$__rate_interval]) > 0","hide":false,"iconColor":"red","name":"Service Restarts","step":"60s","tagKeys":"service_name","titleFormat":"Restart: {{service_name}}","type":"dashboard"},
+    {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"enable":true,"expr":"replication_stream_stuck{} > 0","hide":false,"iconColor":"dark-red","name":"Stream Stuck","step":"60s","titleFormat":"Stream Stuck","type":"dashboard"}
+  ]},
+  "editable":true,
+  "fiscalYearStartMonth":0,
+  "graphTooltip":2,
+  "id":null,
+  "links":[
+    {"title":"Temporal Standby Dashboard","url":"/d/temporal-overview-v1","type":"link","icon":"external link","tooltip":"Open main Temporal server dashboard","targetBlank":true}
+  ],
+  "liveNow":false,
+  "panels":[
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":0},
+      "id":10,
+      "title":"\ud83d\udd34 Stream Health",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":3,"w":24,"x":0,"y":1},
+          "id":1001,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Replication Stream Health** \u2014 binary go/no-go signals for the standby stream. `replication_stream_stuck` is the most critical: any non-zero value means the stream has stopped making progress. `replication_stream_panic` and `replication_stream_error` indicate stream-level failures. `replication_stream_channel_full` indicates buffer pressure on the receiver."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":0,"y":4},
+          "id":1002,
+          "title":"Stream Stuck",
+          "description":"Non-zero = stream has stopped making progress. Immediate alert.",
+          "type":"stat",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"orientation":"auto","textMode":"auto","colorMode":"background"},
+          "targets":[{"expr":"sum(increase(replication_stream_stuck{}[$__rate_interval]))","legendFormat":"{{instance}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":6,"y":4},
+          "id":1003,
+          "title":"Stream Panics",
+          "description":"Rate of stream-level panics across all history instances.",
+          "type":"stat",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"orientation":"auto","textMode":"auto","colorMode":"background"},
+          "targets":[{"expr":"sum(increase(replication_stream_panic{}[$__rate_interval]))","legendFormat":"{{instance}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":10}]}},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":12,"y":4},
+          "id":1004,
+          "title":"Stream Errors",
+          "description":"Rate of stream-level errors.",
+          "type":"stat",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"orientation":"auto","textMode":"auto","colorMode":"background"},
+          "targets":[{"expr":"sum(increase(replication_stream_error{}[$__rate_interval]))","legendFormat":"{{instance}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":10}]}},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":18,"y":4},
+          "id":1005,
+          "title":"Stream Channel Full",
+          "description":"Buffer pressure on the receiver side.",
+          "type":"stat",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"orientation":"auto","textMode":"auto","colorMode":"background"},
+          "targets":[{"expr":"sum(increase(replication_stream_channel_full{}[$__rate_interval]))","legendFormat":"{{instance}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":24,"x":0,"y":8},
+          "id":1006,
+          "title":"Stream Health Over Time",
+          "description":"Timeseries view of all stream health signals. Any sustained non-zero value warrants investigation.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"sum(rate(replication_stream_stuck{}[$__rate_interval]))","legendFormat":"stream stuck/s","refId":"A"},
+            {"expr":"sum(rate(replication_stream_panic{}[$__rate_interval]))","legendFormat":"stream panics/s","refId":"B"},
+            {"expr":"sum(rate(replication_stream_error{}[$__rate_interval]))","legendFormat":"stream errors/s","refId":"C"},
+            {"expr":"sum(rate(replication_stream_channel_full{}[$__rate_interval]))","legendFormat":"channel full/s","refId":"D"}
+          ]
+        }
+      ]
+    },
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":1},
+      "id":20,
+      "title":"\ud83d\udcc9 Replication Lag",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":4,"w":24,"x":0,"y":1},
+          "id":1010,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Replication Lag** \u2014 how far behind this standby cluster is from the active. `replication_tasks_lag` is the headline: it measures the task ID delta between standby and active. Send/recv backlogs show queue depth on each side. **Note:** `replication_sender_rate_limit_latency` originates on the **active** cluster \u2014 elevated values here explain lag that has no visible cause on the standby side. The default `StandbyClusterDelay` is 5 minutes, so scheduled queue lag below 300s is expected baseline."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1000},{"color":"red","value":5000}]},"min":0},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":0,"y":5},
+          "id":1011,
+          "title":"Replication Tasks Lag",
+          "description":"Task ID delta between standby and active. Lower is better.",
+          "type":"gauge",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":true,"showThresholdMarkers":true},
+          "targets":[{"expr":"avg(replication_tasks_lag_sum / replication_tasks_lag_count)","legendFormat":"Replication Tasks Lag","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":500},{"color":"red","value":2000}]},"min":0},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":8,"y":5},
+          "id":1012,
+          "title":"Recv Backlog Depth",
+          "description":"Average depth of the receiver-side replication backlog.",
+          "type":"gauge",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":true,"showThresholdMarkers":true},
+          "targets":[{"expr":"avg(replication_tasks_recv_backlog_sum / replication_tasks_recv_backlog_count)","legendFormat":"Recv Backlog Depth","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":500},{"color":"red","value":2000}]},"min":0},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":16,"y":5},
+          "id":1013,
+          "title":"Send Backlog Depth",
+          "description":"Average depth of the sender-side (active cluster) backlog. Elevated values may explain standby lag.",
+          "type":"gauge",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":true,"showThresholdMarkers":true},
+          "targets":[{"expr":"avg(replication_task_send_backlog_sum / replication_task_send_backlog_count)","legendFormat":"Send Backlog Depth","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":5}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":0,"y":12},
+          "id":1014,
+          "title":"Replication Latencies",
+          "description":"End-to-end, queue, processing, and transmission latencies. On a healthy standby all should be low and stable.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_latency_bucket{}[$__rate_interval])))","legendFormat":"end-to-end","refId":"A"},
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_task_queue_latency_bucket{}[$__rate_interval])))","legendFormat":"queue","refId":"B"},
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_task_processing_latency_bucket{}[$__rate_interval])))","legendFormat":"processing","refId":"C"},
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_task_transmission_latency_bucket{}[$__rate_interval])))","legendFormat":"transmission","refId":"D"},
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_task_load_latency_bucket{}[$__rate_interval])))","legendFormat":"load (persistence)","refId":"E"}
+          ]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":5}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":12,"y":12},
+          "id":1015,
+          "title":"Sender Rate Limit Latency (Active \u2192 Standby)",
+          "description":"Time the active cluster spent rate-limiting replication sends. Elevated values here explain standby lag with no other visible cause on the standby side. Controlled by ReplicationEnableRateLimit on the active cluster.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"histogram_quantile($p, sum by (le) (rate(replication_sender_rate_limit_latency_bucket{}[$__rate_interval])))","legendFormat":"rate limit latency","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":5}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":24,"x":0,"y":19},
+          "id":1016,
+          "title":"Replication Task Generation and Load Latency",
+          "description":"Generation latency = time from workflow event to replication task creation. Load latency = persistence schedule-to-start for replication tasks.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_task_generation_latency_bucket{}[$__rate_interval])))","legendFormat":"generation","refId":"A"},
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_task_load_latency_bucket{}[$__rate_interval])))","legendFormat":"load","refId":"B"}
+          ]
+        }
+      ]
+    },
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":2},
+      "id":30,
+      "title":"\ud83d\udd01 Task Pipeline Health",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":4,"w":24,"x":0,"y":1},
+          "id":1020,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Task Pipeline Health** \u2014 tracks the full replication task lifecycle on the standby receiver. The gap between `received` and `applied` on the throughput panel is your real-time backlog indicator. `task_errors_standby_retry_counter` is standby-specific: it increments when standby tasks can't find their history events and must retry \u2014 directly tied to `StandbyTaskMissingEventsResendDelay` (10min default). High attempt counts on the histogram indicate tasks struggling to apply."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":24,"x":0,"y":5},
+          "id":1021,
+          "title":"Replication Task Throughput (Recv vs Applied vs Failed)",
+          "description":"The gap between received and applied lines is your live standby backlog. Sustained failed/s requires immediate investigation.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"sum(rate(replication_tasks_recv{}[$__rate_interval]))","legendFormat":"received/s","refId":"A"},
+            {"expr":"sum(rate(replication_tasks_applied{}[$__rate_interval]))","legendFormat":"applied/s","refId":"B"},
+            {"expr":"sum(rate(replication_tasks_failed{}[$__rate_interval]))","legendFormat":"failed/s","refId":"C"},
+            {"expr":"sum(rate(replication_tasks_skipped{}[$__rate_interval]))","legendFormat":"skipped/s","refId":"D"}
+          ]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":10}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":0,"y":12},
+          "id":1022,
+          "title":"Standby Retry Counter",
+          "description":"Increments when standby tasks cannot find history events and must retry. Tied to StandbyTaskMissingEventsResendDelay (default 10min). Sustained high values indicate the standby is consistently missing events from the active cluster.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum(rate(task_errors_standby_retry_counter{}[$__rate_interval]))","legendFormat":"standby retries/s","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":12,"y":12},
+          "id":1023,
+          "title":"Replication Task Errors by Type",
+          "description":"Replication task errors broken down by error type. Useful for identifying specific failure modes.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum by (error_type) (rate(replication_tasks_error_by_type{}[$__rate_interval]))","legendFormat":"{{error_type}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":10}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":0,"y":19},
+          "id":1024,
+          "title":"Replication Task Attempts Histogram",
+          "description":"Average attempts per replication task. High values mean tasks are struggling to apply \u2014 cross-reference with standby retry counter and stream health.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"avg(replication_tasks_attempt_sum / replication_tasks_attempt_count)","legendFormat":"avg attempts per task","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":12,"y":19},
+          "id":1025,
+          "title":"Backfill and Duplicate Events",
+          "description":"Backfill rate indicates recovery is in progress (expected after a gap or restart). Elevated duplicate events indicate stream instability.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"sum(rate(replication_tasks_back_fill{}[$__rate_interval]))","legendFormat":"backfill/s","refId":"A"},
+            {"expr":"sum(rate(replication_duplicated_task{}[$__rate_interval]))","legendFormat":"duplicates/s","refId":"B"},
+            {"expr":"histogram_quantile($p, sum by (le) (rate(replication_tasks_back_fill_latency_bucket{}[$__rate_interval])))","legendFormat":"backfill latency","refId":"C"}
+          ]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":24,"x":0,"y":26},
+          "id":1026,
+          "title":"Outlier Namespaces",
+          "description":"Namespaces that are disproportionately contributing to replication problems.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum by (namespace) (rate(replication_outlier_namespace{}[$__rate_interval]))","legendFormat":"{{namespace}}","refId":"A"}]
+        }
+      ]
+    },
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":3},
+      "id":40,
+      "title":"\ud83d\udc80 Replication DLQ (\u26a0\ufe0f Cassandra Only)",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":5,"w":24,"x":0,"y":1},
+          "id":1030,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Replication DLQ** \u26a0\ufe0f **Cassandra persistence only** \u2014 these panels are only meaningful if your Temporal cluster uses Cassandra as the persistence backend. On PostgreSQL/MySQL the history task DLQ is not implemented and these metrics will not be emitted.\n\nThe gap between `dlq_max_level` and `dlq_ack_level` represents unprocessed DLQ depth. `replication_dlq_non_empty` is the simplest alert: any non-zero value means tasks have failed past all retry attempts. `replication_dlq_failed` means tasks couldn't even be written to the DLQ \u2014 a more severe signal. Use `tdbg dlq` CLI to inspect DLQ contents."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":0,"y":6},
+          "id":1031,
+          "title":"DLQ Non-Empty \u26a0\ufe0f Cassandra Only",
+          "description":"Non-zero means tasks have failed past all retry attempts and landed in DLQ.",
+          "type":"stat",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"orientation":"auto","textMode":"auto","colorMode":"background"},
+          "targets":[{"expr":"sum(replication_dlq_non_empty{})","legendFormat":"{{instance}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":6,"y":6},
+          "id":1032,
+          "title":"DLQ Enqueue Failures \u26a0\ufe0f Cassandra Only",
+          "description":"Tasks that failed AND could not be written to DLQ. More severe than dlq_non_empty.",
+          "type":"stat",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"orientation":"auto","textMode":"auto","colorMode":"background"},
+          "targets":[{"expr":"sum(rate(replication_dlq_failed{}[$__rate_interval]))","legendFormat":"{{instance}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1}]},"min":0},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":12,"y":6},
+          "id":1033,
+          "title":"DLQ Max Level \u26a0\ufe0f Cassandra Only",
+          "description":"Highest task ID written to DLQ.",
+          "type":"gauge",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":true,"showThresholdMarkers":true},
+          "targets":[{"expr":"max(replication_dlq_max_level{})","legendFormat":"DLQ Max Level \u26a0\ufe0f Cassandra Only","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1}]},"min":0},"overrides":[]},
+          "gridPos":{"h":4,"w":6,"x":18,"y":6},
+          "id":1034,
+          "title":"DLQ Ack Level \u26a0\ufe0f Cassandra Only",
+          "description":"Last task ID acknowledged/processed from DLQ. Gap between max and ack level = unprocessed DLQ depth.",
+          "type":"gauge",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":true,"showThresholdMarkers":true},
+          "targets":[{"expr":"max(replication_dlq_ack_level{})","legendFormat":"DLQ Ack Level \u26a0\ufe0f Cassandra Only","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":24,"x":0,"y":10},
+          "id":1035,
+          "title":"DLQ Depth Over Time (Max - Ack Level) \u26a0\ufe0f Cassandra Only",
+          "description":"The gap between DLQ max level and ack level over time. Growing gap means DLQ is accumulating faster than it is being processed.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"max(replication_dlq_max_level{}) - max(replication_dlq_ack_level{})","legendFormat":"DLQ unprocessed depth","refId":"A"},
+            {"expr":"max(replication_dlq_max_level{})","legendFormat":"max level","refId":"B"},
+            {"expr":"max(replication_dlq_ack_level{})","legendFormat":"ack level","refId":"C"}
+          ]
+        }
+      ]
+    },
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":4},
+      "id":50,
+      "title":"\ud83c\udf10 Namespace Replication",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":3,"w":24,"x":0,"y":1},
+          "id":1040,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Namespace Replication** \u2014 separate from history task replication. Namespace replication failures are a distinct failure mode: you can have healthy history replication but broken namespace replication, which causes subtle issues on failover (missing namespaces, stale configs). This DLQ is **not** Cassandra-specific."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":0,"y":4},
+          "id":1041,
+          "title":"Namespace Replication Task Ack Level",
+          "description":"How far along namespace-level replication is. Flat line indicates replication has stalled.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"max(namespace_replication_task_ack_level{})","legendFormat":"ack level","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":8,"y":4},
+          "id":1042,
+          "title":"Namespace Replication DLQ Levels",
+          "description":"Gap between DLQ max level and ack level for namespace replication. Growing gap means namespace replication tasks are failing.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"max(namespace_dlq_max_level{})","legendFormat":"DLQ max level","refId":"A"},
+            {"expr":"max(namespace_dlq_ack_level{})","legendFormat":"DLQ ack level","refId":"B"}
+          ]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":16,"y":4},
+          "id":1043,
+          "title":"Namespace Replication DLQ Enqueue Requests",
+          "description":"Rate of namespace replication tasks being sent to DLQ.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum(rate(namespace_replication_dlq_enqueue_requests{}[$__rate_interval]))","legendFormat":"dlq enqueue/s","refId":"A"}]
+        }
+      ]
+    },
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":5},
+      "id":60,
+      "title":"\u2699\ufe0f Standby Task Processing Behavior",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":5,"w":24,"x":0,"y":1},
+          "id":1050,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Standby Task Processing Behavior** \u2014 these metrics are expected to be non-zero on a standby cluster but spikes or sustained growth indicate problems.\n\n`task_errors_not_active_counter` is expected on standby (tasks are not processed as active) but a sudden spike may indicate namespace misconfiguration or a stale active/passive assignment.\n\n`replication_tasks_back_fill` indicates recovery is happening \u2014 expected after restarts or gaps, but sustained high rates mean the standby is consistently behind.\n\nThe scheduled queue lag baseline is ~300s (5min) due to `StandbyClusterDelay` default. Alert on growth **beyond** that baseline, not on the absolute value."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":0,"y":6},
+          "id":1051,
+          "title":"Not-Active Task Errors (Expected on Standby)",
+          "description":"Expected non-zero on standby. A sudden spike may indicate namespace misconfiguration or incorrect active/passive cluster assignment.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum(rate(task_errors_not_active_counter{}[$__rate_interval]))","legendFormat":"not active errors/s","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":300},{"color":"red","value":600}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":12,"y":6},
+          "id":1052,
+          "title":"Standby Scheduled Queue Lag",
+          "description":"Scheduled queue lag on the standby. The ~300s (5min) baseline is expected due to StandbyClusterDelay. Alert on growth beyond baseline, not on absolute value.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"histogram_quantile($p, sum by (le) (rate(shardinfo_scheduled_queue_lag_bucket{task_category=\"timer\",service_name=\"history\"}[$__rate_interval])))","legendFormat":"scheduled queue lag","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":0,"y":13},
+          "id":1053,
+          "title":"Task Terminal Failures and DLQ Failures",
+          "description":"Terminal failures = tasks that gave up after all retries. DLQ failures = tasks that failed AND could not be written to DLQ (most severe).",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"sum(rate(task_terminal_failures{}[$__rate_interval]))","legendFormat":"terminal failures/s","refId":"A"},
+            {"expr":"sum(rate(task_dlq_failures{}[$__rate_interval]))","legendFormat":"DLQ write failures/s","refId":"B"}
+          ]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":10}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":12,"y":13},
+          "id":1054,
+          "title":"Namespace Handover Errors",
+          "description":"Errors caused by namespace handover state. Expected during planned failover, unexpected otherwise.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum(rate(task_errors_namespace_handover{}[$__rate_interval]))","legendFormat":"handover errors/s","refId":"A"}]
+        }
+      ]
+    },
+    {
+      "collapsed":true,
+      "gridPos":{"h":1,"w":24,"x":0,"y":6},
+      "id":70,
+      "title":"\ud83c\udfd7\ufe0f Standby Cluster Infrastructure",
+      "type":"row",
+      "panels":[
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{},"overrides":[]},
+          "gridPos":{"h":3,"w":24,"x":0,"y":1},
+          "id":1060,
+          "title":"",
+          "type":"text",
+          "options":{"mode":"markdown","content":"**Standby Cluster Infrastructure** \u2014 the standby cluster's own persistence and shard health. Even though the standby doesn't serve live traffic, it still writes mutable state for replicated workflows. Persistence degradation on the standby directly impacts how quickly it can apply replication tasks."}
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":0.3},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":0,"y":4},
+          "id":1061,
+          "title":"Persistence Latency",
+          "description":"Persistence latencies on the standby cluster broken down by operation.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"histogram_quantile($p, sum(rate(persistence_latency_bucket{}[$__rate_interval])) by (operation, le))","legendFormat":"{{operation}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":12,"x":12,"y":4},
+          "id":1062,
+          "title":"Persistence Errors",
+          "description":"Persistence errors on the standby cluster broken down by operation and error type.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum(rate(persistence_error_with_type{}[$__rate_interval])) by (operation, error_type)","legendFormat":"{{operation}} - {{error_type}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":0.2},{"color":"red","value":0.5}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":0,"y":11},
+          "id":1063,
+          "title":"Shard Acquisition Latency",
+          "description":"Latency for acquiring shards on the standby. High values during failover prep are a warning sign.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"histogram_quantile($p, sum by (le) (rate(sharditem_acquisition_latency_bucket{service_name=\"history\"}[$__rate_interval])))","legendFormat":"shard acquisition latency","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"palette-classic"}},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":8,"y":11},
+          "id":1064,
+          "title":"Shard Movement",
+          "description":"Shard creation and removal rate on the standby. Heavy churn during failover is expected; unexpected churn warrants investigation.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[
+            {"expr":"sum(rate(sharditem_created_count{service_name=\"history\"}[$__rate_interval]))","legendFormat":"created/s","refId":"A"},
+            {"expr":"sum(rate(sharditem_removed_count{service_name=\"history\"}[$__rate_interval]))","legendFormat":"removed/s","refId":"B"}
+          ]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2},"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]}},"overrides":[]},
+          "gridPos":{"h":7,"w":8,"x":16,"y":11},
+          "id":1065,
+          "title":"Service Restarts",
+          "description":"Rate of service restarts by service on the standby cluster.",
+          "type":"timeseries",
+          "options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},
+          "targets":[{"expr":"sum by (service_name) (increase(restarts{}[$__rate_interval]))","legendFormat":"{{service_name}}","refId":"A"}]
+        },
+        {
+          "datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},
+          "fieldConfig":{"defaults":{"unit":"percent","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"orange","value":95},{"color":"green","value":99}]},"min":0},"overrides":[]},
+          "gridPos":{"h":7,"w":24,"x":0,"y":18},
+          "id":1066,
+          "title":"Persistence Availability",
+          "description":"Percentage of persistence requests that succeeded on the standby cluster.",
+          "type":"gauge",
+          "options":{"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":true,"showThresholdMarkers":true},
+          "targets":[{"expr":"100 - (sum(rate(persistence_errors{}[$__rate_interval]) or on () vector(0)) / sum(rate(persistence_requests{}[$__rate_interval])) * 100)","legendFormat":"Persistence Availability","refId":"A"}]
+        }
+      ]
+    }
+  ],
+  "refresh":"30s",
+  "schemaVersion":38,
+  "style":"dark",
+  "tags":["temporal","prometheus","replication","standby"],
+  "templating":{"list":[
+    {"current":{},"hide":0,"includeAll":false,"label":"Datasource","multi":false,"name":"DS_PROMETHEUS","options":[],"query":"prometheus","refresh":1,"type":"datasource"},
+    {"current":{},"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"definition":"label_values(replication_tasks_recv, cluster)","hide":0,"includeAll":false,"label":"Standby Cluster","multi":false,"name":"cluster","query":"label_values(replication_tasks_recv, cluster)","refresh":2,"sort":1,"type":"query"},
+    {"current":{},"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"definition":"label_values(replication_tasks_recv, source_cluster)","hide":0,"includeAll":true,"label":"Source (Active) Cluster","multi":false,"name":"source_cluster","query":"label_values(replication_tasks_recv, source_cluster)","refresh":2,"sort":1,"type":"query"},
+    {"current":{},"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"definition":"label_values(service_requests, namespace)","hide":0,"includeAll":true,"label":"Namespace","multi":false,"name":"namespace","query":"label_values(service_requests, namespace)","refresh":2,"sort":1,"type":"query"},
+    {"current":{"selected":true,"text":"0.99","value":"0.99"},"hide":0,"label":"Percentile","name":"p","options":[{"selected":false,"text":"0.50","value":"0.50"},{"selected":false,"text":"0.75","value":"0.75"},{"selected":false,"text":"0.90","value":"0.90"},{"selected":false,"text":"0.95","value":"0.95"},{"selected":true,"text":"0.99","value":"0.99"},{"selected":false,"text":"0.999","value":"0.999"}],"query":"0.50,0.75,0.90,0.95,0.99,0.999","type":"custom"}
+  ]},
+  "time":{"from":"now-1h","to":"now"},
+  "timepicker":{},
+  "timezone":"utc",
+  "title":"Temporal Standby Cluster \u2014 Replication Health",
+  "uid":"temporal-standby-replication-v1",
+  "version":1,
+  "weekStart":""
+}
