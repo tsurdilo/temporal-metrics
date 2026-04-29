@@ -191,6 +191,20 @@
     {
       "collapsed": true,
       "gridPos": {"h":1,"w":24,"x":0,"y":11},
+      "id": 399,
+      "title": "Matching Task Queue Info",
+      "type": "row",
+      "panels": [
+        {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":3,"w":24,"x":0,"y":12},"id":400,"title":"","type":"text","options":{"mode":"markdown","content":"**Matching Task Queue Info** section focuses on matching task queue latencies and throttling. Can be useful among other things for managing task queue partitions if needed."}},
+        {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2,"thresholdsStyle":{"mode":"dashed"}},"thresholds":{"mode":"absolute","steps":[{"color":"green"},{"color":"orange","value":0.5},{"color":"red","value":2.0}]},"color":{"mode":"palette-classic"}},"overrides":[]},"id":401,"title":"Async Match Latency","description":"Time from task creation to worker pickup for tasks that could not be sync-matched and had to wait in the queue. High values with healthy workers indicate matching is the bottleneck \u2014 consider increasing task queue partitions. See the Task Queue Partitions operator guide for details.","type":"timeseries","options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},"targets":[{"expr":"histogram_quantile($p, sum by (operation, le) (rate(asyncmatch_latency_bucket{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval])))","legendFormat":"{{operation}}","refId":"A"}],"gridPos":{"h":7,"w":12,"x":0,"y":15}},
+        {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"fieldConfig":{"defaults":{"unit":"s","custom":{"lineWidth":2}},"overrides":[]},"id":402,"title":"Sync Match Latency","description":"Latency for tasks that were directly matched to a waiting poller within the sync match window. Low sync match latency with high async match latency indicates workers are present but matching partitions are overwhelmed.","type":"timeseries","options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},"targets":[{"expr":"histogram_quantile($p, sum by (operation, le) (rate(syncmatch_latency_bucket{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval])))","legendFormat":"{{operation}}","refId":"A"}],"gridPos":{"h":7,"w":12,"x":12,"y":15}},
+        {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2,"thresholdsStyle":{"mode":"dashed"}},"thresholds":{"mode":"absolute","steps":[{"color":"green"},{"color":"red","value":1}]},"color":{"mode":"palette-classic"}},"overrides":[]},"id":403,"title":"Sync Throttle Count","description":"Rate of tasks being throttled by matching. The default limit is 1,000 tasks/s per partition. Any non-zero sustained rate means you are hitting the per-partition limit \u2014 increasing task queue partitions can help distribute the load. Rule out worker shortage first by checking Async Match Latency and Schedule to Start Latencies.","type":"timeseries","options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},"targets":[{"expr":"sum by (namespace, task_type) (rate(sync_throttle_count{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval]))","legendFormat":"{{namespace}} - {{task_type}}","refId":"A"}],"gridPos":{"h":7,"w":12,"x":0,"y":22}},
+        {"datasource":{"type":"prometheus","uid":"${DS_PROMETHEUS}"},"fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2,"thresholdsStyle":{"mode":"dashed"}},"thresholds":{"mode":"absolute","steps":[{"color":"green"},{"color":"red","value":1}]},"color":{"mode":"palette-classic"}},"overrides":[]},"id":404,"title":"Task Write Throttle Count","description":"Rate of matching falling behind writing tasks to persistence. This is often caused by insufficient workers (low sync match rate) rather than partition count \u2014 check Schedule to Start Latencies and worker health first before increasing partitions.","type":"timeseries","options":{"legend":{"displayMode":"table","placement":"bottom","calcs":["min","max","mean","lastNotNull"]}},"targets":[{"expr":"sum by (namespace, task_type) (rate(task_write_throttle_count{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval]))","legendFormat":"{{namespace}} - {{task_type}}","refId":"A"}],"gridPos":{"h":7,"w":12,"x":12,"y":22}}
+      ]
+    },
+    {
+      "collapsed": true,
+      "gridPos": {"h":1,"w":24,"x":0,"y":12},
       "id": 110,
       "title": "SDK Workers Info",
       "type": "row",
@@ -208,7 +222,7 @@
     },
     {
       "collapsed": true,
-      "gridPos": {"h":1,"w":24,"x":0,"y":12},
+      "gridPos": {"h":1,"w":24,"x":0,"y":13},
       "id": 160,
       "title": "Pollers",
       "type": "row",
@@ -220,7 +234,7 @@
     },
     {
       "collapsed": true,
-      "gridPos": {"h":1,"w":24,"x":0,"y":13},
+      "gridPos": {"h":1,"w":24,"x":0,"y":14},
       "id": 8,
       "title": "Visibility",
       "type": "row",
@@ -234,7 +248,7 @@
     },
     {
       "collapsed": true,
-      "gridPos": {"h":1,"w":24,"x":0,"y":14},
+      "gridPos": {"h":1,"w":24,"x":0,"y":15},
       "id": 170,
       "title": "Cluster Replication",
       "type": "row",
@@ -256,7 +270,7 @@
     },
     {
       "collapsed": true,
-      "gridPos": {"h":1,"w":24,"x":0,"y":15},
+      "gridPos": {"h":1,"w":24,"x":0,"y":16},
       "id": 220,
       "title": "Authorization",
       "type": "row",
