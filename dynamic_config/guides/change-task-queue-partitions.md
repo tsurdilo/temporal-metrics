@@ -1,4 +1,4 @@
-# Change Temporal Task Queue Partitions — Guide
+# Temporal Num Task Queue Partitions — Operator Guide
 
 ## What Are Task Queue Partitions?
 
@@ -17,10 +17,12 @@ These are set per task queue and take effect without a server restart.
 
 ## Defaults and Sizing
 
-- **Default: 4 partitions** — sufficient for the vast majority of use cases.
+- **Default: 4 partitions** — set via the `GlobalDefaultNumTaskQueuePartitions = 4` constant, applied to all user-facing task queues.
 - For high throughput use cases, 16 partitions is typically sufficient. There are cases where more may be needed — see the sections below on how to identify when that's the case.
 - For low-traffic task queues, reducing partitions down to 1 can be beneficial to reduce resource consumption on matching hosts.
 - Setting partitions to 1 is also useful when strict and exact activity task dispatch rate control is needed — with multiple partitions, rate limits are applied per partition, making it harder to enforce precise cluster-wide dispatch rates for a given task queue.
+
+Note that Temporal's internal system task queues (such as the per-namespace worker task queue and system activity worker task queues in `SystemLocalNamespace`) default to 1 partition — since those queues only ever have one worker running per task queue. This default only applies to internal Temporal task queues and does not affect user-defined task queues.
 
 > Only increase partitions if you have confirmed evidence that matching is the bottleneck.
 
