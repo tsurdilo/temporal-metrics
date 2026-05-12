@@ -51,6 +51,18 @@ This is designed as a self-service operational guide — operators should be abl
 
 ---
 
+### Section 0 — History Host Health
+
+| # | Alert Name | Severity | Panel | Condition |
+|---|---|---|---|---|
+| 0a | History Pod Disappeared | 🔴 Critical | Pods Missing | `clamp_min(max_over_time(count(host_health{service_name="history"})[1h:1m]) - (count(host_health{service_name="history"}) or vector(0)), 0) >= 1` — fires when any pod stops emitting `host_health` compared to the fleet baseline seen in the last hour. A stopped or crashed pod goes absent rather than reporting NOT_SERVING, so this alert is required to catch pod loss. |
+| 0b | History Pod Degraded | 🔴 Critical | Pods NOT_SERVING | `sum(clamp_max(host_health{service_name="history"} == 2, 1)) >= 1` — fires when any pod is actively reporting NOT_SERVING. Covers persistence/RPC threshold breaches and gRPC health failures past the 60s init window. |
+| 0c | Metric Freshness Stale | 🔴 Critical | Metric Freshness | `time() - max(timestamp(host_health{service_name="history"})) > 120` — fires when `host_health` hasn't been updated in 120 seconds. Means the poller can't reach the frontend or the frontend is down. No `host_health` data from a running poller is itself a health signal. |
+
+> **Note on alert 0a vs 0b**: these cover two distinct failure modes. A pod that crashes or is killed stops emitting `host_health` entirely — it will never appear as NOT_SERVING. A pod that is running but degraded (persistence latency, RPC errors, gRPC health not SERVING past init window) will emit `host_health = 2`. Both alerts are required; neither subsumes the other.
+
+---
+
 ### Section 1 — Cluster Throughput
 
 | # | Alert Name | Severity | Panel | Condition |
@@ -242,9 +254,9 @@ This is designed as a self-service operational guide — operators should be abl
 
 | Severity | Count |
 |---|---|
-| 🔴 Critical | 35 |
+| 🔴 Critical | 38 |
 | ⚠️ Warning | 40 |
-| **Total** | **73** |
+| **Total** | **78** |
 
 ---
 

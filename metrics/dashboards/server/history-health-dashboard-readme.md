@@ -4,7 +4,7 @@ A Grafana dashboard for monitoring the deep health of a self-hosted Temporal Ser
 
 > **Compatibility:** Temporal Server v1.20+ · Grafana 9.0+ · Prometheus · Kubernetes
 
-> **Current version:** v1.0.0 — see [CHANGELOG](./history-health-dashboard-changelog.md)
+> **Current version:** v1.1.0 — see [CHANGELOG](./history-health-dashboard-changelog.md)
 
 ---
 
@@ -202,6 +202,7 @@ The primary row. All other rows exist to explain what you see here.
 | **Pods DECLINED_SERVING** | Stat | Always 0 — per-pod `host_health` never emits value 3. This panel is retained for completeness but will not show data. |
 | **Pods SERVING** | Stat | Count of history pods in state 1. Red if zero. |
 | **Total Pods Reporting** | Stat | Count of history pods emitting `host_health`. A drop here means pods disappeared or the poller stopped. |
+| **Pods Missing** | Stat | Pods that stopped reporting `host_health` compared to peak count in the last hour. Non-zero means pods disappeared entirely — a stopped or crashed pod does not emit `host_health` and will not appear as NOT_SERVING. Red at ≥ 1. |
 | **Metric Freshness** | Stat | Seconds since `host_health` was last updated. Red at 120s — poller is broken or frontend is unreachable. |
 | **Pod Count by Health State** | Time series | All three states over time on one chart. Color coded green/red/yellow. |
 | **Pod Health State Percentage** | Time series | Percentage of pods in each state. The `not_serving %` line has a threshold at 50% — the frontend `historyHostErrorPercentage` default that triggers cluster-level NOT_SERVING. |
@@ -292,6 +293,7 @@ Shard movement most commonly occurs during cluster restarts and scaling of histo
 |---|---|---|---|---|
 | History Host Health | Pods NOT_SERVING | — | ≥ 1 | Any degraded pod warrants investigation |
 | History Host Health | Pods DECLINED_SERVING | — | — | Always 0 — per-pod metric never emits state 3 |
+| History Host Health | Pods Missing | — | ≥ 1 | Any missing pod; a dropped pod goes absent, not NOT_SERVING |
 | History Host Health | Metric Freshness | 60s | 120s | 120s = poller likely broken |
 | History Host Health | Pod Health % (not_serving) | — | 50% | Frontend cluster threshold |
 | Persistence Health | Persistence Latency | 300ms | 1s | DeepHealthCheck check 4 fires at 500ms average |

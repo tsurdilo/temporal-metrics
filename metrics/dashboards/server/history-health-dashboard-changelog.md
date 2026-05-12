@@ -1,5 +1,12 @@
 # Changelog — Temporal History Host Health Dashboard
 
+## v1.1.0 — 2026-05-12
+
+### Added
+- **History Pods Count** stat panel in the History Host Health row — detects pods that stopped emitting `host_health` entirely (e.g. crashed or killed), which do not appear as NOT_SERVING. Uses `max_over_time` over a 1-hour window as the fleet baseline; turns red when current pod count falls below that baseline.
+
+---
+
 ## v1.0.0 — 2026-05-12
 
 Initial versioned release.
