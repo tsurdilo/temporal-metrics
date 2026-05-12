@@ -2,5 +2,46 @@
 
 Grafana dashboards for monitoring a self-hosted Temporal Server cluster.
 
-- [Server Overview Dashboard](./temporal-server-readme.md) — cluster health, throughput, persistence, and service metrics
-- [Standby Cluster Dashboard](./temporal-standby-readme.md) — replication health, lag, and failover readiness for standby clusters
+---
+
+## Dashboards
+
+### Temporal Server Dashboard — v2.0.0
+
+Comprehensive cluster monitoring: throughput, persistence, service latencies, throttling, shard movement, workflow stats, matching, replication, and authorization.
+
+| File | Description |
+|---|---|
+| [temporal-server.json](./temporal-server.json) | Grafana dashboard JSON — import this into Grafana |
+| [temporal-server-readme.md](./temporal-server-readme.md) | Full panel reference and setup guide |
+| [temporal-server-changelog.md](./temporal-server-changelog.md) | Version history |
+
+---
+
+### Temporal Standby Cluster — Replication Health — v2.0.0
+
+Dedicated standby-side monitoring: replication lag, DLQ depth, standby task retries, stream health, and failover readiness.
+
+| File | Description |
+|---|---|
+| [temporal-standby.json](./temporal-standby.json) | Grafana dashboard JSON — import this into Grafana |
+| [temporal-standby-readme.md](./temporal-standby-readme.md) | Full panel reference and setup guide |
+| [temporal-standby-changelog.md](./temporal-standby-changelog.md) | Version history |
+
+---
+
+### Temporal History Host Health Dashboard — v1.0.0
+
+Deep health monitoring for the history service fleet: `host_health` state, gRPC readiness, persistence health, RPC health, and shard acquisition and movement.
+
+| File | Description |
+|---|---|
+| [history-health-dashboard.json](./history-health-dashboard.json) | Grafana dashboard JSON — import this into Grafana |
+| [history-health-dashboard-readme.md](./history-health-dashboard-readme.md) | Full panel reference and setup guide |
+| [history-health-dashboard-changelog.md](./history-health-dashboard-changelog.md) | Version history |
+
+---
+
+## Updating to a new version
+
+When a new version is available, reimport the updated JSON into Grafana via **Dashboards → Import**. Because the dashboard UID is stable across versions, Grafana will update your existing dashboard in place rather than creating a duplicate. Check the relevant changelog before updating to see what changed.

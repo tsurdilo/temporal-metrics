@@ -4,6 +4,8 @@ A Grafana dashboard for monitoring Temporal workers built on the Core SDK — th
 
 > **Compatibility:** Temporal Core SDK (TypeScript, Python, .NET, Ruby) · Grafana 9.0+ · Prometheus
 
+> **Current version:** v1.0.0 — see [CHANGELOG](./temporal-sdk-core-changelog.md)
+
 ---
 
 ## Table of Contents

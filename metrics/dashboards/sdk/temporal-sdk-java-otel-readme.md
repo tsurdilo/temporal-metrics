@@ -6,6 +6,8 @@ A Grafana dashboard for monitoring Temporal Java SDK clients and workers configu
 >
 > **Reporter:** This dashboard targets Java SDK workers configured with an OpenTelemetry-based metrics reporter. If you are using `MicrometerClientStatsReporter` instead, use the `temporal-sdk-java-micrometer` dashboard — histogram metric names differ between the two reporters.
 
+> **Current version:** v1.0.0 — see [CHANGELOG](./temporal-sdk-java-otel-changelog.md)
+
 ---
 
 ## Table of Contents

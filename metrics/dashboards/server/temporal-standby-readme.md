@@ -4,6 +4,8 @@ A dedicated Grafana dashboard for monitoring Temporal standby clusters in a mult
 
 > **Compatibility:** Temporal Server v1.20+ · Grafana 9.0+ · Prometheus
 
+> **Current version:** v2.0.0 — see [CHANGELOG](./temporal-standby-changelog.md)
+
 ---
 
 ## Table of Contents
