@@ -476,8 +476,8 @@ import (
 )
 
 func main() {
-	frontendAddr := "temporal-frontend:7233" // adjust to your frontend address
-	pollInterval := 15 * time.Second
+	frontendAddr := getenv("FRONTEND_ADDR", "temporal-loadbalancing:7233")
+	pollInterval := mustParseDuration(getenv("POLL_INTERVAL", "15s"))
 
 	conn, err := grpc.NewClient(frontendAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -517,11 +517,52 @@ func main() {
 		}
 	}
 }
+
+func getenv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func mustParseDuration(s string) time.Duration {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		log.Fatalf("invalid duration %q: %v", s, err)
+	}
+	return d
+}
+```
+
+**`go.mod`:**
+```
+module temporal-health-poller
+
+go 1.26.2
+
+require (
+	go.temporal.io/server v1.31.0
+	google.golang.org/grpc v1.79.3
+)
+```
+
+**Dockerfile:**
+```dockerfile
+FROM golang:1.26-alpine AS builder
+RUN apk add --no-cache git
+WORKDIR /app
+COPY go.mod go.sum main.go ./
+RUN CGO_ENABLED=0 GOOS=linux go build -o poller .
+
+FROM alpine:latest
+RUN apk add --no-cache ca-certificates
+COPY --from=builder /app/poller /poller
+ENTRYPOINT ["/poller"]
 ```
 
 **Notes:**
 - If TLS is required, replace `insecure.NewCredentials()` with your cluster's TLS configuration
-- The polling interval determines metric freshness for alerting — set it based on your alerting SLA requirements
+- The polling interval determines metric freshness for alerting — set it based on your alerting SLA requirements; configure via `POLL_INTERVAL` env var
 - `resp.State` is the aggregated fleet-level state evaluated by `healthCheckerImpl.Check` logic documented in section 2; the per-host detail is in `resp.Services[].Hosts[]`
 - Before relying on `host_health` alerts, confirm what is currently calling `DeepHealthCheck` in your environment and at what interval
 

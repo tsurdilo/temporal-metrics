@@ -1,9 +1,16 @@
 # Changelog — Temporal History Host Health Dashboard
 
+## v1.2.0 — 2026-05-12
+
+### Changed
+- Renamed **History Pods Count** panel to **Fleet Size Change** — the name better reflects that the signal covers both unexpected pod loss and planned scale-down events, which are indistinguishable at the metric level.
+
+---
+
 ## v1.1.0 — 2026-05-12
 
 ### Added
-- **History Pods Count** stat panel in the History Host Health row — detects pods that stopped emitting `host_health` entirely (e.g. crashed or killed), which do not appear as NOT_SERVING. Uses `max_over_time` over a 1-hour window as the fleet baseline; turns red when current pod count falls below that baseline.
+- **Fleet Size Change** stat panel in the History Host Health row — detects pods that stopped emitting `host_health` entirely (e.g. crashed or killed), which do not appear as NOT_SERVING. Uses `max_over_time` over a 1-hour window as the fleet baseline; turns red when current pod count falls below that baseline.
 
 ---
 
