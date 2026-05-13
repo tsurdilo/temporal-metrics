@@ -4,7 +4,7 @@ A comprehensive Grafana dashboard for monitoring a self-hosted [Temporal](https:
 
 > **Compatibility:** Temporal Server v1.20+ · Grafana 9.0+ · Prometheus
 
-> **Current version:** v2.0.0 — see [CHANGELOG](./temporal-server-changelog.md)
+> **Current version:** v2.1.0 — see [CHANGELOG](./temporal-server-changelog.md)
 
 ---
 
@@ -30,8 +30,9 @@ A comprehensive Grafana dashboard for monitoring a self-hosted [Temporal](https:
   - [SDK Workers Info](#13-sdk-workers-info)
   - [Pollers](#14-pollers)
   - [Visibility](#15-visibility)
-  - [Cluster Replication](#16-cluster-replication)
-  - [Authorization](#17-authorization)
+  - [Worker Registry (In-memory)](#16-worker-registry-in-memory)
+  - [Cluster Replication](#17-cluster-replication)
+  - [Authorization](#18-authorization)
 - [Related Resources](#related-resources)
 
 ---
@@ -306,7 +307,21 @@ Tracks the performance and availability of the Temporal Visibility store, which 
 
 ---
 
-### 16. Cluster Replication
+### 16. Worker Registry (In-memory)
+
+Tracks the matching service's in-memory worker heartbeat cache — registrations, evictions, capacity utilization, and activity slot usage. The registry is rebuilt from incoming worker heartbeats; a matching service restart means zero entries until workers re-heartbeat. Each matching instance has its own independent registry with no cross-host synchronization.
+
+| Panel | Description |
+|---|---|
+| **Workers Added** | Rate of new workers being registered in the registry (first heartbeat seen for a worker instance key). A sustained high rate alongside a high removed rate may indicate workers crash-looping. |
+| **Workers Removed** | Rate of workers removed from the registry across all causes: `SHUTDOWN` status heartbeat, TTL expiry (default 5m without a heartbeat), and capacity-based eviction. |
+| **Percentile of Num of Cached Entries** | Estimated number of worker entries in the registry at the selected percentile across matching instances. Derived as `capacity_utilization × 1,000,000`, which assumes the default `matching.workerRegistryMaxEntries = 1,000,000`. If that config has been changed, values will be off by a proportional factor. |
+| **Percentile of Cache Utilization** | Registry capacity utilization as a percentage at the selected percentile across matching instances. Threshold lines: 80% orange, 100% red. A value above 100% means the registry is temporarily over `maxItems`, blocked from eviction by `minEvictAge` (default 1m). Sustained > 100% warrants increasing `matching.workerRegistryMaxEntries` or decreasing `matching.workerRegistryMinEvictAge`. |
+| **Workers - Number of Activity Slots Used** | Distribution of activity slots currently in use per worker at the selected percentile. Only emitted by workers that include `ActivityTaskSlotsInfo` in their heartbeat — older SDK versions may not populate this field. |
+
+---
+
+### 17. Cluster Replication
 
 Tracks metrics related to multi-cluster replication from the **active cluster's perspective** — task generation, send throughput, and stream health toward standby clusters. This group is only relevant when running Temporal in a multi-cluster configuration with active replication between clusters.
 
@@ -331,7 +346,7 @@ Tracks metrics related to multi-cluster replication from the **active cluster's 
 
 ---
 
-### 17. Authorization
+### 18. Authorization
 
 Tracks authorization-related metrics including denied requests, authorization system failures, and latency of authorization checks. Only relevant when an authorization plugin is configured on the cluster.
 
