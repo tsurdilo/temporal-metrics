@@ -1,0 +1,794 @@
+# Temporal Server — Essential Alert Set
+#
+# Grafana alerting provisioning file. Drop into provisioning/alerting/ in your
+# Grafana installation. Alerts load automatically on startup or hot-reload.
+#
+# Prerequisites:
+#   - Temporal Server v1.20+ emitting Prometheus metrics
+#   - A Grafana datasource named exactly "Prometheus"
+#     If your datasource has a different name, replace the datasourceUid value
+#     on the single line marked DATASOURCE below.
+#   - temporal-server.json dashboard imported (UID: temporal-overview-v1)
+#     Dashboard panel links will not resolve without it.
+#
+# This file covers the Essential Alert Set (12 alerts).
+# See planning.md for the full alert inventory and design decisions.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: temporal-server-essential
+    folder: Temporal Server
+    interval: 1m
+    rules:
+
+      # ---------------------------------------------------------------------------
+      # Alert 1 — Total RPS Drops to Zero
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-001
+        title: "Temporal: Total RPS Drops to Zero"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "sum(rate(service_requests{service_name=\"frontend\"}[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          service: temporal
+          component: frontend
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "21"
+          summary: "Temporal: total frontend RPS dropped to zero ({{ $value | printf \"%.2f\" }} req/s)"
+          description: |
+            Total frontend RPS has dropped to zero. The frontend is up and reporting metrics
+            but receiving no requests — the cluster is unreachable from clients and from other
+            Temporal services. Check frontend pod health and service_errors rate.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/01-total-rps-zero.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 1b — Frontend Metrics Absent
+      # Companion to alert 1. Fires when the service_requests series for the
+      # frontend disappears entirely (pod crash, Prometheus scrape failure).
+      # Alert 1 cannot fire in this case because there is no value to evaluate.
+      # noDataState is OK — when the series IS present, absent() returns no data,
+      # which is the normal healthy state.
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-001b
+        title: "Temporal: Frontend Metrics Absent"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "absent(rate(service_requests{service_name=\"frontend\"}[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        labels:
+          severity: critical
+          service: temporal
+          component: frontend
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "21"
+          summary: "Temporal: frontend service_requests series is absent — frontend may be down or Prometheus scrape is failing"
+          description: |
+            The service_requests metric for the Temporal frontend has stopped being reported
+            entirely. All frontend pods may have crashed or are struggling to the point of not
+            reporting metrics. Alert 1 cannot detect this — it requires a series value to evaluate.
+            Check frontend pod health and Prometheus scrape targets.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/01b-frontend-metrics-absent.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 4 — Namespace RPS Drops to Zero
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-004
+        title: "Temporal: Namespace RPS Drops to Zero"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "sum by (namespace) (rate(service_requests{service_name=\"frontend\",namespace!=\"_unknown_\"}[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              settings:
+                mode: dropNN
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          service: temporal
+          component: frontend
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "20"
+          summary: "Temporal: RPS dropped to zero for namespace {{ $labels.namespace }} ({{ $value | printf \"%.2f\" }} req/s)"
+          description: |
+            Namespace {{ $labels.namespace }} is receiving no frontend requests. Other namespaces
+            may be healthy. Check if alert 1 is also firing — if so this is cluster-wide.
+            Otherwise check if workers for this namespace are running and connected.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/04-namespace-rps-zero.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 8 — Shard Lock Latency Critical
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-008
+        title: "Temporal: Shard Lock Latency Critical"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus
+            model:
+              editorMode: code
+              expr: "histogram_quantile(0.99, sum by (le) (rate(semaphore_latency_bucket{operation=\"ShardInfo\",service_name=\"history\"}[5m])))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.3]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          service: temporal
+          component: history
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "14"
+          summary: "Temporal: p99 shard lock latency critical ({{ $value | printf \"%.3fs\" }})"
+          description: |
+            p99 shard lock latency has exceeded 300ms. This can indicate history service issues,
+            elevated DB latencies holding the lock longer, or hot shard conditions from high
+            frequency reuse of the same workflow ID. Check persistence latencies and workflow
+            lock latency for correlation.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/08-shard-lock-latency-critical.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 12 — Persistence Latency Critical
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-012
+        title: "Temporal: Persistence Latency Critical"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus
+            model:
+              editorMode: code
+              expr: "histogram_quantile(0.99, sum by (operation, le) (rate(persistence_latency_bucket{operation=~\"CreateWorkflowExecution|UpdateWorkflowExecution|ConflictResolveWorkflowExecution|GetWorkflowExecution|GetCurrentExecution|AppendHistoryNodes|ReadHistoryBranch|CreateTasks|GetTasks|GetTransferTasks|GetTimerTasks|CompleteTransferTask|CompleteTimerTask\"}[5m])))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          service: temporal
+          component: persistence
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "71"
+          summary: "Temporal: p99 persistence latency critical ({{ $value | printf \"%.3fs\" }})"
+          description: |
+            p99 persistence latency has exceeded 1s for a critical-path DB operation.
+            Persistence latencies can cause delays writing and reading from the database,
+            causing slowness for critical operations that support forward progress of workflow
+            executions. Check the Persistence Latencies panel to identify which operation is slow.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/12-persistence-latency-critical.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 25 — Service Panic Detected
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-025
+        title: "Temporal: Service Panic Detected"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: Prometheus
+            model:
+              editorMode: code
+              expr: "sum by (service_name) (rate(service_panics[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          service: temporal
+          component: server
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "99"
+          summary: "Temporal: service panic detected in {{ $labels.service_name }}"
+          description: |
+            A Go panic has been detected in the {{ $labels.service_name }} service. Depending
+            on where the panic occurs this can cause shard loss, incomplete workflow state
+            transitions, or task corruption. Check pod logs — the panic stack trace is the
+            primary diagnostic artifact. Search logs for "panic".
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/25-service-panic-detected.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 27 — Service Error Rate Critical
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-027
+        title: "Temporal: Service Error Rate Critical"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "sum by (namespace) (rate(service_errors{service_name=\"frontend\",namespace!=\"_unknown_\"}[5m])) / sum by (namespace) (rate(service_requests{service_name=\"frontend\",namespace!=\"_unknown_\"}[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              settings:
+                mode: dropNN
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.3]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        labels:
+          severity: critical
+          service: temporal
+          component: frontend
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "92"
+          summary: "Temporal: frontend error rate critical for {{ $labels.namespace }} ({{ $value | printf \"%.0f%%\" }})"
+          description: |
+            More than 30% of frontend requests are returning errors for namespace
+            {{ $labels.namespace }}. Service errors can significantly affect user namespaces
+            and their workflows. Check Service Errors by Namespace and Persistence Latencies
+            panels to identify root cause.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/27-service-error-rate-critical.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 30 — System Overload Throttling
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-030
+        title: "Temporal: System Overload Throttling"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: Prometheus
+            model:
+              editorMode: code
+              expr: "sum(rate(service_errors_resource_exhausted{resource_exhausted_cause=~\"RESOURCE_EXHAUSTED_CAUSE_SYSTEM_OVERLOADED|RESOURCE_EXHAUSTED_CAUSE_CIRCUIT_BREAKER_OPEN\"}[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          service: temporal
+          component: persistence
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "121"
+          summary: "Temporal: system overload or circuit breaker throttling active ({{ $value | printf \"%.2f\" }} errors/s)"
+          description: |
+            Resource exhausted errors with cause SYSTEM_OVERLOADED or CIRCUIT_BREAKER_OPEN
+            are being returned to clients. Unlike configured RPS/QPS limits, these are dynamic
+            self-protection responses — the cluster is actively shedding load because it cannot
+            keep up. Check Persistence Latencies and Persistence Requests Total panels.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/30-system-overload-throttling.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 34 — Unexpected Shard Movement
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-034
+        title: "Temporal: Unexpected Shard Movement"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus
+            model:
+              editorMode: code
+              expr: "(sum(rate(sharditem_created_count{service_name=\"history\"}[5m])) + sum(rate(sharditem_removed_count{service_name=\"history\"}[5m])) + sum(rate(shard_closed_count{service_name=\"history\"}[5m])) > 0) unless (sum(increase(restarts{service_name=\"history\"}[8m])) > 0)"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: critical
+          service: temporal
+          component: history
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "60"
+          summary: "Temporal: unexpected shard movement detected without history service restarts"
+          description: |
+            Shard creation, removal, or closing detected on the history service without a
+            corresponding restart in the last 8 minutes. Unexpected shard movement typically
+            indicates DB pressure causing ownership loss, membership instability, or a history
+            pod unable to maintain shard leases. Check Shards Created/Removed/Closed and
+            Persistence Latencies panels.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/34-unexpected-shard-movement.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 38 — Timer Task Scheduling Lag Critical
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-038
+        title: "Temporal: Timer Task Scheduling Lag Critical"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus
+            model:
+              editorMode: code
+              expr: "histogram_quantile(0.99, sum by (operation, le) (rate(shardinfo_scheduled_queue_lag_bucket{task_category=\"timer\",service_name=\"history\"}[5m])))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [30]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          service: temporal
+          component: history
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "325"
+          summary: "Temporal: timer task scheduling lag critical ({{ $value | printf \"%.1fs\" }} behind)"
+          description: |
+            Timer task scheduling lag has exceeded 30 seconds. Workflow timers, scheduled
+            activities, and workflow timeouts are firing late — deadlines, heartbeat timeouts,
+            and schedule-to-start timeouts are affected. Check Persistence Latencies and
+            Shard Lock Latency panels. Note: sparse data on idle clusters can produce
+            non-zero p99 artifacts — confirm there is actual timer activity before investigating.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/38-timer-scheduling-lag-critical.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 57 — All Pollers Disconnected
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-057
+        title: "Temporal: All Pollers Disconnected"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "sum by (namespace) (service_pending_requests{service_name=\"frontend\",namespace!=\"_unknown_\",operation=~\"PollWorkflowTaskQueue|PollActivityTaskQueue\"})"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              settings:
+                mode: dropNN
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          service: temporal
+          component: frontend
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "162"
+          summary: "Temporal: all pollers disconnected for namespace {{ $labels.namespace }}"
+          description: |
+            No workers are actively polling for workflow or activity tasks in namespace
+            {{ $labels.namespace }}. Workflows stall at every task boundary. Queued tasks
+            are persisted to the database by the matching service, adding DB pressure while
+            pollers are absent. Check worker process health for this namespace.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/57-all-pollers-disconnected.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 74 — Matching Partition Sync Throttle Active
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-074
+        title: "Temporal: Matching Partition Sync Throttle Active"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "sum by (namespace, task_type) (rate(sync_throttle_count{service_name=\"matching\",namespace!=\"_unknown_\"}[5m]))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              settings:
+                mode: dropNN
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          service: temporal
+          component: matching
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "403"
+          summary: "Temporal: matching sync throttle active for {{ $labels.namespace }}/{{ $labels.task_type }}"
+          description: |
+            The matching service sync dispatch limit is being hit for namespace
+            {{ $labels.namespace }}, task type {{ $labels.task_type }}. If alert 57
+            (All Pollers Disconnected) is also firing, fix worker provisioning first.
+            If pollers are healthy, increase matching.numTaskqueueWritePartitions and
+            matching.numTaskqueueReadPartitions for the affected task queue.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/74-matching-sync-throttle-active.md
+        isPaused: false

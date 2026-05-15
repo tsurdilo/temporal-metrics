@@ -37,9 +37,86 @@ This is designed as a self-service operational guide — operators should be abl
 
 | Deliverable | Description | Status |
 |---|---|---|
-| `temporal-server-alerts.json` | Importable Grafana alert rules | 🔲 Not started |
-| `runbooks/` | One markdown runbook per alert group | 🔲 Not started |
-| `README.md` | Index of all alerts with links to runbooks | 🔲 Not started |
+| `temporal-server-alerts.yaml` | Grafana alerting provisioning file — drop into `provisioning/alerting/` and alerts load automatically on Grafana startup. Datasource referenced by name (`Prometheus`) so no UID replacement needed. | ✅ Essential Set complete (12 alerts) |
+| `runbooks/` | One markdown runbook per alert — structure created upfront, triage and remediation content filled in after alerts are tested and validated in Grafana | ✅ Stubs created, content TODO after testing |
+| `README.md` | Setup instructions and index of all alerts with links to runbooks | ✅ Complete |
+
+### Implementation Notes
+
+**Delivery format:** Grafana alerting provisioning YAML (`provisioning/alerting/`), not an importable JSON file. This avoids per-installation datasource UID replacement and scales to the full alert inventory without requiring UI imports. Operators drop the file into their Grafana provisioning directory and alerts appear on startup.
+
+**Datasource:** Referenced by name (`Prometheus`) — the Grafana default when adding a Prometheus datasource. Operators with a differently named datasource update the `datasourceUid` field in the YAML (one value, not per-alert).
+
+**Dashboard links:** Every alert includes `__dashboardUid__` and `__panelId__` annotations so Grafana renders a direct clickthrough to the relevant panel when the alert fires. Dashboard UID is `temporal-overview-v1`. Panel IDs are stable across dashboard versions unless a panel is explicitly removed or recreated.
+
+**Scope:** Essential Alert Set alerts are cluster-wide (no namespace filter). Per-namespace variants are deferred to a future iteration.
+
+**YAML structure:**
+- Grafana folder: `Temporal Server` — scoped to server alerts; SDK alerts will live in a separate folder when added
+- Group name: `temporal-server-essential` — single group for the Essential Set
+- Evaluation interval: `1m`
+
+**Labels:** Every alert carries `severity: critical`, `service: temporal`, and `component: <value>`. Component values by alert:
+
+| Alerts | Component |
+|---|---|
+| 1, 4, 27, 57 | `frontend` |
+| 8, 34, 38 | `history` |
+| 12, 30, 33 | `persistence` |
+| 25 | `server` |
+| 74 | `matching` |
+
+**Annotations:** Every alert carries the following annotation fields. Content is per-alert — the structure is fixed, the text is not.
+- `summary`: `"Temporal: <what happened> ({{ $value | printf \"%.2f\" }})"` — one line shown in notification subject
+- `description`: what the alert detects, `Immediate action: <per-alert tailored text>`, `Runbook: <full GitHub URL>`
+- `__dashboardUid__`: `temporal-overview-v1`
+- `__panelId__`: per-alert (see panel ID table above)
+
+**Rate interval:** All expressions use a hardcoded `5m` rate interval. There is no `$__rate_interval` equivalent for alert rules — Grafana computes that variable from the dashboard time range, which does not exist in alert evaluation context. `5m` is a safe default covering scrape intervals from 15s to 60s.
+
+### PromQL Expressions
+
+All expressions are derived from the corresponding dashboard panel queries with `$__rate_interval` → `5m`, `$p` → `0.99`, and namespace filter removed.
+
+| # | `for` | Expression |
+|---|---|---|
+| 1 | 5m | `sum(rate(service_requests{service_name="frontend"}[5m])) == 0` |
+| 1b | 2m | `absent(rate(service_requests{service_name="frontend"}[5m]))` |
+| 4 | 5m | `sum by (namespace) (rate(service_requests{service_name="frontend"}[5m])) == 0` |
+| 8 | 5m | `histogram_quantile(0.99, sum by (le) (rate(semaphore_latency_bucket{operation="ShardInfo",service_name="history"}[5m]))) > 0.3` |
+| 12 | 5m | `histogram_quantile(0.99, sum by (operation, le) (rate(persistence_latency_bucket{operation=~"CreateWorkflowExecution\|UpdateWorkflowExecution\|ConflictResolveWorkflowExecution\|GetWorkflowExecution\|GetCurrentExecution\|AppendHistoryNodes\|ReadHistoryBranch\|CreateTasks\|GetTasks\|GetTransferTasks\|GetTimerTasks\|CompleteTransferTask\|CompleteTimerTask"}[5m]))) > 1` |
+| 25 | 1m | `sum by (service_name) (rate(service_panics[5m])) > 0` |
+| 27 | 2m | `sum by (namespace) (rate(service_errors{service_name="frontend"}[5m])) / sum by (namespace) (rate(service_requests{service_name="frontend"}[5m])) > 0.3` |
+| 30 | 1m | `sum(rate(service_errors_resource_exhausted{resource_exhausted_cause=~"RESOURCE_EXHAUSTED_CAUSE_SYSTEM_OVERLOADED\|RESOURCE_EXHAUSTED_CAUSE_CIRCUIT_BREAKER_OPEN"}[5m])) > 0` |
+| 33 | — | removed from Essential Set — replication-only metric, not applicable to single active cluster |
+| 34 | 10m | `(sum(rate(sharditem_created_count{service_name="history"}[5m])) + sum(rate(sharditem_removed_count{service_name="history"}[5m])) + sum(rate(shard_closed_count{service_name="history"}[5m])) > 0) unless (sum(increase(restarts{service_name="history"}[8m])) > 0)` |
+| 38 | 5m | `histogram_quantile(0.99, sum by (operation, le) (rate(shardinfo_scheduled_queue_lag_bucket{task_category="timer",service_name="history"}[5m]))) > 30` |
+| 57 | 1m | `sum by (namespace) (service_pending_requests{service_name="frontend",namespace!="_unknown_",operation=~"PollWorkflowTaskQueue\|PollActivityTaskQueue"}) == 0` |
+| 74 | 1m | `sum by (namespace, task_type) (rate(sync_throttle_count{service_name="matching"}[5m])) > 0` |
+
+---
+
+## Essential Alert Set
+
+Operators who want focused coverage without implementing the full alert inventory should start here. Each alert covers a distinct, high-impact failure mode with no overlap. Together they span the full stack — frontend availability, service health, persistence, task processing, shard stability, worker connectivity, and task queue dispatch.
+
+| # | Alert Name | Section | Panel | Panel ID | Why |
+|---|---|---|---|---|---|
+| 1 | Total RPS Drops to Zero | 1 — Cluster Throughput | Total RPS | 21 | Cluster is dead from the user's perspective |
+| 1b | Frontend Metrics Absent | 1 — Cluster Throughput | Total RPS | 21 | Frontend pods stopped emitting metrics entirely — alert 1 cannot fire when the series disappears |
+| 4 | Namespace RPS Drops to Zero | 1 — Cluster Throughput | RPS per Namespace | 20 | A specific namespace is receiving no traffic — workers disconnected or namespace misconfigured |
+| 8 | Shard Lock Latency Critical | 2 — Shard and Workflow Lock Latencies | Shard Lock Latency | 14 | Shard lock pressure directly degrades all history operations |
+| 12 | Persistence Latency Critical | 3 — Persistence | Persistence Latencies | 71 | DB slowness is the root cause of most cluster degradation |
+| 25 | Service Panic Detected | 5 — Service Requests and Errors | Service Panics | 99 | Binary and unambiguous — a panic means something is fundamentally broken |
+| 27 | Service Error Rate Critical | 5 — Service Requests and Errors | Service Errors by Namespace | 92 | High sustained frontend error rate means users are being actively impacted |
+| 30 | System Overload Throttling | 6 — Throttling and Limits | Resource Exhausted with Cause | 121 | `SYSTEM_OVERLOADED` or `CIRCUIT_BREAKER_OPEN` cause means DB is overwhelmed or a circuit breaker has tripped and users are receiving errors right now |
+| 33 | Transfer Tasks Being Discarded | 7 — Busy Workflow Throttling | Transfer Active Task Errors Discarded | 141 | Replication-only — `task_errors_discarded` only emits on standby clusters; not applicable to single active cluster deployments. Removed from Essential Set. |
+| 34 | Unexpected Shard Movement | 8 — Shard Movement | Shards Created | 60 | Shard churn without a restart indicates DB pressure or membership instability. Runbook should also reference Service Restarts (panel 63). |
+| 38 | Timer Task Scheduling Lag Critical | 9 — History Timer Task Info | Timer Task Scheduling Latency | 325 | Timers firing 30s+ late means workflow timeouts and scheduled actions are functionally broken |
+| 57 | All Pollers Disconnected | 14 — Pollers | Total Concurrent Pollers | 162 | All workers gone for a namespace — complete task processing halt |
+| 74 | Matching Partition Sync Throttle Active | 12 — Matching Task Queue Info | Sync Throttle Count | 403 | Per-partition dispatch limit hit — if alert 57 is not also firing, task queue partitions need to be increased |
+
+> **Dashboard UID for all panel links:** `temporal-overview-v1`
 
 ---
 
@@ -53,9 +130,11 @@ This is designed as a self-service operational guide — operators should be abl
 
 ### Section 0 — History Host Health
 
+> **Dashboard:** These alerts correspond to the **[Temporal History Host Health Dashboard](../../dashboards/server/history-health-dashboard.json)** (`history-health-dashboard.json`), not the main Temporal Server Dashboard. This is the only section in this document that references a companion dashboard. All other sections (1–16) map to panels in `temporal-server.json`.
+
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
-| 0a | History Pod Disappeared | 🔴 Critical | Pods Missing | `clamp_min(max_over_time(count(host_health{service_name="history"})[1h:1m]) - (count(host_health{service_name="history"}) or vector(0)), 0) >= 1` — fires when any pod stops emitting `host_health` compared to the fleet baseline seen in the last hour. A stopped or crashed pod goes absent rather than reporting NOT_SERVING, so this alert is required to catch pod loss. |
+| 0a | History Pod Disappeared | 🔴 Critical | Fleet Size Change | `clamp_min(max_over_time(count(host_health{service_name="history"})[1h:1m]) - (count(host_health{service_name="history"}) or vector(0)), 0) >= 1` — fires when any pod stops emitting `host_health` compared to the fleet baseline seen in the last hour. A stopped or crashed pod goes absent rather than reporting NOT_SERVING, so this alert is required to catch pod loss. |
 | 0b | History Pod Degraded | 🔴 Critical | Pods NOT_SERVING | `sum(clamp_max(host_health{service_name="history"} == 2, 1)) >= 1` — fires when any pod is actively reporting NOT_SERVING. Covers persistence/RPC threshold breaches and gRPC health failures past the 60s init window. |
 | 0c | Metric Freshness Stale | 🔴 Critical | Metric Freshness | `time() - max(timestamp(host_health{service_name="history"})) > 120` — fires when `host_health` hasn't been updated in 120 seconds. Means the poller can't reach the frontend or the frontend is down. No `host_health` data from a running poller is itself a health signal. |
 
@@ -68,6 +147,7 @@ This is designed as a self-service operational guide — operators should be abl
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
 | 1 | Total RPS Drops to Zero | 🔴 Critical | Total RPS | Total frontend RPS drops to zero — frontend service is down, network connectivity is broken, or load balancer is misconfigured |
+| 1b | Frontend Metrics Absent | 🔴 Critical | Total RPS | `absent()` guard for alert 1 — fires when `service_requests{service_name="frontend"}` series disappears entirely (pod crash, scrape failure). Alert 1 cannot detect this case because a missing series produces no value to evaluate. `noDataState: OK` required so Grafana treats the normal (series present) case as healthy. |
 | 2 | Total RPS Approaching Limit | ⚠️ Warning | Total RPS | Total frontend RPS exceeds orange threshold (default 2,000 — assumes ~3 frontend instances, adjust to `frontend.rps` × instance count) |
 | 3 | Total RPS Over Limit | 🔴 Critical | Total RPS | Total frontend RPS exceeds red threshold (default 7,000) — active throttling is happening, users are receiving `RpsLimit` errors |
 | 4 | Namespace RPS Drops to Zero | 🔴 Critical | RPS per Namespace | Per-namespace RPS drops to zero — namespace is receiving no traffic, workers may have disconnected or namespace is misconfigured |
@@ -131,7 +211,7 @@ This is designed as a self-service operational guide — operators should be abl
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
 | 29 | RPS/QPS Throttling Active | ⚠️ Warning | Resource Exhausted with Cause | Resource exhausted errors with cause `RpsLimit` or `QpsLimit` |
-| 30 | System Overload Throttling | 🔴 Critical | Resource Exhausted with Cause | Resource exhausted errors with cause `SystemOverload` — indicates DB is overwhelmed |
+| 30 | System Overload Throttling | 🔴 Critical | Resource Exhausted with Cause | Resource exhausted errors with cause `SYSTEM_OVERLOADED` or `CIRCUIT_BREAKER_OPEN` — indicates DB is overwhelmed or a circuit breaker has tripped |
 
 ---
 
@@ -189,7 +269,17 @@ This is designed as a self-service operational guide — operators should be abl
 
 ---
 
-### Section 12 — SDK Workers
+### Section 12 — Matching Task Queue Info
+
+| # | Alert Name | Severity | Panel | Condition |
+|---|---|---|---|---|
+| 74 | Matching Partition Sync Throttle Active | 🔴 Critical | Sync Throttle Count | Any sustained non-zero sync throttle rate — the per-partition dispatch limit (default 1,000 tasks/s) is being hit. Triage by cross-checking alert 57 (All Pollers Disconnected): if alert 57 is also firing, fix worker provisioning first. If alert 57 is not firing, workers are healthy and the bottleneck is partition count — increase `matching.numTaskqueuePartitions`. |
+
+> **Alerts not planned:** Async Match Latency high/critical is intentionally omitted — schedule-to-start alerts (48/49 in Section 13) already cover the end-user impact. Task Write Throttle Count is omitted because it typically indicates worker shortage rather than partition count, making it redundant with Section 13. Sync Match Latency is omitted as it is most useful as a comparative signal alongside async match, not as a standalone alert.
+
+---
+
+### Section 13 — SDK Workers Info
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -205,7 +295,7 @@ This is designed as a self-service operational guide — operators should be abl
 
 ---
 
-### Section 13 — Pollers
+### Section 14 — Pollers
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -214,7 +304,7 @@ This is designed as a self-service operational guide — operators should be abl
 
 ---
 
-### Section 14 — Visibility
+### Section 15 — Visibility
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -226,7 +316,13 @@ This is designed as a self-service operational guide — operators should be abl
 
 ---
 
-### Section 15 — Cluster Replication
+### Section 16 — Worker Registry (In-memory)
+
+> **No alerts planned for this section.** The dashboard panels (Workers Added/Removed, cache utilization, activity slot usage) are useful for observing worker churn and registry capacity, but registry capacity issues are expected to surface first through Section 13 signals (schedule-to-start latency, task backlog). Consider adding a registry capacity saturation alert (utilization > 100% sustained) in a future iteration.
+
+---
+
+### Section 17 — Cluster Replication
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -241,7 +337,7 @@ This is designed as a self-service operational guide — operators should be abl
 
 ---
 
-### Section 16 — Authorization
+### Section 18 — Authorization
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -254,9 +350,9 @@ This is designed as a self-service operational guide — operators should be abl
 
 | Severity | Count |
 |---|---|
-| 🔴 Critical | 38 |
+| 🔴 Critical | 39 |
 | ⚠️ Warning | 40 |
-| **Total** | **78** |
+| **Total** | **79** |
 
 ---
 
