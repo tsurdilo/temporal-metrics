@@ -6,7 +6,7 @@ A Grafana dashboard for monitoring Temporal Java SDK clients and workers configu
 >
 > **Reporter:** This dashboard targets Java SDK workers configured with an OpenTelemetry-based metrics reporter. If you are using `MicrometerClientStatsReporter` instead, use the `temporal-sdk-java-micrometer` dashboard — histogram metric names differ between the two reporters.
 
-> **Current version:** v1.0.0 — see [CHANGELOG](./temporal-sdk-java-otel-changelog.md)
+> **Current version:** v1.1.0 — see [CHANGELOG](./temporal-sdk-java-otel-changelog.md)
 
 ---
 
@@ -63,6 +63,14 @@ When using an OpenTelemetry-based reporter, histogram metrics are exported exact
 | `temporal_nexus_execution_latency` | `temporal_nexus_execution_latency_bucket` |
 
 Counter and gauge metrics use the same names as the raw SDK metric names — no `_total` suffix is appended. This is the key difference from the Micrometer dashboard, where Micrometer appends `_total` to all counters automatically.
+
+### Counter metrics (selected)
+
+| SDK metric name | Prometheus name (OTel) |
+|---|---|
+| `temporal_workflow_task_execution_failed` | `temporal_workflow_task_execution_failed` |
+| `temporal_workflow_task_no_completion` | `temporal_workflow_task_no_completion` |
+| `temporal_workflow_task_heartbeat` | `temporal_workflow_task_heartbeat` |
 
 ---
 
@@ -162,6 +170,7 @@ This section focuses on Workflow Task Information. All panels are broken down by
 | **Workflow Task Replay Latency** | Time spent replaying history during a workflow task at the selected percentile. Uses `temporal_workflow_task_replay_latency_bucket` (OTel). |
 | **Workflow Task Execution Failed** | Rate of workflow task execution failures broken down by workflow type, task queue, and failure reason. Turns red at any non-zero value. `failure_reason` will be `NonDeterminismError` or `WorkflowError`. Uses `temporal_workflow_task_execution_failed`. |
 | **Workflow Task No Completion** | Rate of workflow tasks processed but for which no completion was sent to the server. Turns orange at any non-zero value. Uses `temporal_workflow_task_no_completion`. |
+| **Workflow Task Heartbeat** | Rate of forced workflow task completions triggered by local activities running past 80% of the workflow task timeout. Each increment means the SDK sent `RespondWorkflowTaskCompleted` with `force_create_new_workflow_task=true` and the server returned a new workflow task. Broken down by workflow type and task queue. Uses `temporal_workflow_task_heartbeat`. |
 
 ---
 

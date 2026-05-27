@@ -2,7 +2,7 @@
 
 Grafana alerting provisioning rules for a self-hosted Temporal Server cluster.
 
-> **Current scope:** Essential Alert Set — 12 critical alerts covering the most impactful failure modes. See [planning.md](./planning.md) for the full alert inventory (79 alerts) and the roadmap for future additions.
+> **Current scope:** Essential Alert Set — 14 alerts covering the most impactful failure modes. See [planning.md](./planning.md) for the full alert inventory (85 alerts) and the roadmap for future additions.
 
 ---
 
@@ -74,6 +74,8 @@ component: <frontend | history | persistence | server | matching>
 | 27 | [Service Error Rate Critical](./runbooks/27-service-error-rate-critical.md) | frontend | [Service Errors by Namespace](../../dashboards/server/temporal-server-readme.md) | 2m |
 | 30 | [System Overload Throttling](./runbooks/30-system-overload-throttling.md) | persistence | [Resource Exhausted with Cause](../../dashboards/server/temporal-server-readme.md) | 1m |
 | 34 | [Unexpected Shard Movement](./runbooks/34-unexpected-shard-movement.md) | history | [Shards Created](../../dashboards/server/temporal-server-readme.md) | 10m |
+| 34b | [Immediate Queue Lag Critical](./runbooks/34b-immediate-queue-lag-critical.md) | history | [Immediate Queue Lag per Pod](../../dashboards/server/temporal-server-readme.md) | 15m |
+| 34f | [Shard Deadlock Detected](./runbooks/34f-shard-deadlock-detected.md) | history | [Suspected Deadlocks per Pod](../../dashboards/server/temporal-server-readme.md) | 1m |
 | 38 | [Timer Task Scheduling Lag Critical](./runbooks/38-timer-scheduling-lag-critical.md) | history | [Timer Task Scheduling Latency](../../dashboards/server/temporal-server-readme.md) | 5m |
 | 57 | [All Pollers Disconnected](./runbooks/57-all-pollers-disconnected.md) | frontend | [Total Concurrent Pollers](../../dashboards/server/temporal-server-readme.md) | 1m |
 | 74 | [Matching Partition Sync Throttle Active](./runbooks/74-matching-sync-throttle-active.md) | matching | [Sync Throttle Count](../../dashboards/server/temporal-server-readme.md) | 1m |
@@ -95,6 +97,8 @@ All thresholds are starting points based on Temporal's default dynamic config va
 | 27 | Error rate > 30% sustained 2m | Ratio-based |
 | 30 | Any `RESOURCE_EXHAUSTED_CAUSE_SYSTEM_OVERLOADED` or `RESOURCE_EXHAUSTED_CAUSE_CIRCUIT_BREAKER_OPEN` error | Binary |
 | 34 | Shard creation with zero restarts in 8m window | Compound |
+| 34b | p99 immediate queue lag > 3M tasks | Dashboard red threshold |
+| 34f | Any `dd_current_suspected_deadlocks > 0` | Binary; noDataState OK (event-driven) |
 | 38 | p99 timer lag > 30s | Planning doc threshold |
 | 57 | Pollers < 1 per namespace | Zero workers |
 | 74 | Any sync throttle | Binary |

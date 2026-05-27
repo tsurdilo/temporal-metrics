@@ -792,3 +792,132 @@ groups:
             matching.numTaskqueueReadPartitions for the affected task queue.
             Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/74-matching-sync-throttle-active.md
         isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 34b — Immediate Queue Lag Critical
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-034b
+        title: "Temporal: Immediate Queue Lag Critical"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "histogram_quantile(0.99, sum by (instance, task_category, le) (rate(shardinfo_immediate_queue_lag_bucket{service_name=\"history\"}[5m])))"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [3000000]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 15m
+        labels:
+          severity: critical
+          service: temporal
+          component: history
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "2109"
+          summary: "Temporal: immediate queue lag critical on {{ $labels.instance }} / {{ $labels.task_category }} ({{ $value | printf \"%.0f\" }} tasks)"
+          description: |
+            The p99 immediate task queue lag on history pod {{ $labels.instance }}
+            for category {{ $labels.task_category }} has exceeded 3,000,000 tasks for
+            15 minutes. A shard on this pod is stuck — tasks are queuing but not being
+            processed. Workers may report workflows created but no tasks dispatched.
+
+            Immediate action:
+            1. Check DB Pool Refresh Failure Rate panel — if non-zero, fix DB connectivity first; the shard will self-recover within ~6 min of DB returning to healthy.
+            2. If DB is healthy: run tdbg history-host describe --host-address <pod> to list shard IDs, then tdbg shard describe --shard-id <ID> to find the one with frozen ack levels.
+            3. Run tdbg shard close-shard --shard-id <ID> to force re-acquisition.
+            4. If tdbg does not resolve: restart the history pod.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/34b-immediate-queue-lag-critical.md
+        isPaused: false
+
+      # ---------------------------------------------------------------------------
+      # Alert 34f — Shard Deadlock Detected
+      # ---------------------------------------------------------------------------
+      - uid: temporal-alert-034f
+        title: "Temporal: Shard Deadlock Detected"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
+            model:
+              editorMode: code
+              expr: "sum by (instance) (dd_current_suspected_deadlocks{service_name=\"history\"})"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        labels:
+          severity: critical
+          service: temporal
+          component: history
+        annotations:
+          __dashboardUid__: temporal-overview-v1
+          __panelId__: "2113"
+          summary: "Temporal: shard deadlock detected on {{ $labels.instance }} ({{ $value | printf \"%.0f\" }} suspected)"
+          description: |
+            The deadlock detector has reported {{ $value | printf "%.0f" }} unresolved
+            suspected deadlock(s) on history pod {{ $labels.instance }}. A shard's
+            rwLock or ioSemaphore ping timed out — the lock is currently held and
+            blocking all operations on the affected shard(s).
+
+            Immediate action:
+            1. Check pod logs for the goroutine dump — emitted automatically when system.deadlock.DumpGoroutines=true (default).
+            2. Restart the history pod {{ $labels.instance }}. Do not rely on tdbg close-shard alone — the close path may block on the held lock.
+            3. To automate future recovery: set system.deadlock.FailHealthCheck=true in dynamic config to pull the pod from the load balancer automatically on detection.
+            Runbook: https://github.com/tsurdilo/temporal-metrics/blob/main/metrics/alerts/server/runbooks/34f-shard-deadlock-detected.md
+        isPaused: false

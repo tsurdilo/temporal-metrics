@@ -37,7 +37,7 @@ This is designed as a self-service operational guide — operators should be abl
 
 | Deliverable | Description | Status |
 |---|---|---|
-| `temporal-server-alerts.yaml` | Grafana alerting provisioning file — drop into `provisioning/alerting/` and alerts load automatically on Grafana startup. Datasource referenced by name (`Prometheus`) so no UID replacement needed. | ✅ Essential Set complete (12 alerts) |
+| `temporal-server-alerts.yaml` | Grafana alerting provisioning file — drop into `provisioning/alerting/` and alerts load automatically on Grafana startup. Datasource referenced by name (`Prometheus`) so no UID replacement needed. | ✅ Essential Set complete (14 alerts) |
 | `runbooks/` | One markdown runbook per alert — structure created upfront, triage and remediation content filled in after alerts are tested and validated in Grafana | ✅ Stubs created, content TODO after testing |
 | `README.md` | Setup instructions and index of all alerts with links to runbooks | ✅ Complete |
 
@@ -61,7 +61,7 @@ This is designed as a self-service operational guide — operators should be abl
 | Alerts | Component |
 |---|---|
 | 1, 4, 27, 57 | `frontend` |
-| 8, 34, 38 | `history` |
+| 8, 34, 34b, 34f, 38 | `history` |
 | 12, 30, 33 | `persistence` |
 | 25 | `server` |
 | 74 | `matching` |
@@ -90,6 +90,8 @@ All expressions are derived from the corresponding dashboard panel queries with 
 | 30 | 1m | `sum(rate(service_errors_resource_exhausted{resource_exhausted_cause=~"RESOURCE_EXHAUSTED_CAUSE_SYSTEM_OVERLOADED\|RESOURCE_EXHAUSTED_CAUSE_CIRCUIT_BREAKER_OPEN"}[5m])) > 0` |
 | 33 | — | removed from Essential Set — replication-only metric, not applicable to single active cluster |
 | 34 | 10m | `(sum(rate(sharditem_created_count{service_name="history"}[5m])) + sum(rate(sharditem_removed_count{service_name="history"}[5m])) + sum(rate(shard_closed_count{service_name="history"}[5m])) > 0) unless (sum(increase(restarts{service_name="history"}[8m])) > 0)` |
+| 34b | 15m | `histogram_quantile(0.99, sum by (instance, task_category, le) (rate(shardinfo_immediate_queue_lag_bucket{service_name="history"}[5m]))) > 3000000` |
+| 34f | 1m | `sum by (instance) (dd_current_suspected_deadlocks{service_name="history"}) > 0` |
 | 38 | 5m | `histogram_quantile(0.99, sum by (operation, le) (rate(shardinfo_scheduled_queue_lag_bucket{task_category="timer",service_name="history"}[5m]))) > 30` |
 | 57 | 1m | `sum by (namespace) (service_pending_requests{service_name="frontend",namespace!="_unknown_",operation=~"PollWorkflowTaskQueue\|PollActivityTaskQueue"}) == 0` |
 | 74 | 1m | `sum by (namespace, task_type) (rate(sync_throttle_count{service_name="matching"}[5m])) > 0` |
@@ -112,9 +114,11 @@ Operators who want focused coverage without implementing the full alert inventor
 | 30 | System Overload Throttling | 6 — Throttling and Limits | Resource Exhausted with Cause | 121 | `SYSTEM_OVERLOADED` or `CIRCUIT_BREAKER_OPEN` cause means DB is overwhelmed or a circuit breaker has tripped and users are receiving errors right now |
 | 33 | Transfer Tasks Being Discarded | 7 — Busy Workflow Throttling | Transfer Active Task Errors Discarded | 141 | Replication-only — `task_errors_discarded` only emits on standby clusters; not applicable to single active cluster deployments. Removed from Essential Set. |
 | 34 | Unexpected Shard Movement | 8 — Shard Movement | Shards Created | 60 | Shard churn without a restart indicates DB pressure or membership instability. Runbook should also reference Service Restarts (panel 63). |
-| 38 | Timer Task Scheduling Lag Critical | 9 — History Timer Task Info | Timer Task Scheduling Latency | 325 | Timers firing 30s+ late means workflow timeouts and scheduled actions are functionally broken |
-| 57 | All Pollers Disconnected | 14 — Pollers | Total Concurrent Pollers | 162 | All workers gone for a namespace — complete task processing halt |
-| 74 | Matching Partition Sync Throttle Active | 12 — Matching Task Queue Info | Sync Throttle Count | 403 | Per-partition dispatch limit hit — if alert 57 is not also firing, task queue partitions need to be increased |
+| 34b | Immediate Queue Lag Critical | 9 — Shard Queue Health | Immediate Queue Lag per Pod | 2109 | p99 immediate queue lag > 3M tasks on any `instance + task_category` — one pod's lag diverging monotonically from the fleet is the definitive stuck shard signal |
+| 34f | Shard Deadlock Detected | 9 — Shard Queue Health | Suspected Deadlocks per Pod | 2113 | Binary and unambiguous — any `dd_current_suspected_deadlocks > 0` requires immediate pod restart. `noDataState: OK` because the metric is event-driven and does not emit baseline zero. |
+| 38 | Timer Task Scheduling Lag Critical | 10 — History Timer Task Info | Timer Task Scheduling Latency | 325 | Timers firing 30s+ late means workflow timeouts and scheduled actions are functionally broken |
+| 57 | All Pollers Disconnected | 15 — Pollers | Total Concurrent Pollers | 162 | All workers gone for a namespace — complete task processing halt |
+| 74 | Matching Partition Sync Throttle Active | 13 — Matching Task Queue Info | Sync Throttle Count | 403 | Per-partition dispatch limit hit — if alert 57 is not also firing, task queue partitions need to be increased |
 
 > **Dashboard UID for all panel links:** `temporal-overview-v1`
 
@@ -235,7 +239,22 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 9 — History Timer Task Info
+### Section 9 — Shard Queue Health
+
+| # | Alert Name | Severity | Panel | Condition |
+|---|---|---|---|---|
+| 34a | Immediate Queue Lag High | ⚠️ Warning | Immediate Queue Lag per Pod | p99 immediate queue lag exceeds 500K tasks on any `instance + task_category` — one pod's queue growing while others recover is an early stuck shard signal |
+| 34b | Immediate Queue Lag Critical | 🔴 Critical | Immediate Queue Lag per Pod | p99 immediate queue lag exceeds 3M tasks on any `instance + task_category` — shard is definitively stuck; manual intervention required |
+| 34c | Scheduled Queue Lag High | ⚠️ Warning | Scheduled Queue Lag per Pod | p99 scheduled queue lag exceeds 10 minutes on any `instance + task_category` |
+| 34d | Scheduled Queue Lag Critical | 🔴 Critical | Scheduled Queue Lag per Pod | p99 scheduled queue lag exceeds 30 minutes on any `instance + task_category` |
+| 34e | DB Pool Refresh Failure Elevated | 🔴 Critical | DB Pool Refresh Failure Rate per Pod | Any DB pool refresh failures detected — earliest signal for DB-caused stuck shards; fires before queue lag builds. SQL backends only. |
+| 34f | Shard Deadlock Detected | 🔴 Critical | Suspected Deadlocks per Pod | Any current suspected deadlocks on any history pod — `dd_current_suspected_deadlocks > 0` requires immediate pod restart. `noDataState: OK` — metric is event-driven and does not emit baseline zero. |
+
+> **Note:** All Shard Queue Health alerts aggregate `sum by (instance, task_category, le)` to preserve per-pod isolation. A stuck shard on one pod will not be diluted by healthy shards on other pods — the stuck pod's lag diverges visibly from the rest of the fleet. Alerts 34c–34e apply to SQL backends only (Cassandra does not expose DB pool refresh metrics). Alert 34f uses `noDataState: OK` — absence of data means no deadlocks detected, which is the healthy state.
+
+---
+
+### Section 10 — History Timer Task Info
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -247,7 +266,7 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 10 — Workflow Stats
+### Section 11 — Workflow Stats
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -256,7 +275,7 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 11 — Workflow Execution History Info
+### Section 12 — Workflow Execution History Info
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -269,17 +288,17 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 12 — Matching Task Queue Info
+### Section 13 — Matching Task Queue Info
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
 | 74 | Matching Partition Sync Throttle Active | 🔴 Critical | Sync Throttle Count | Any sustained non-zero sync throttle rate — the per-partition dispatch limit (default 1,000 tasks/s) is being hit. Triage by cross-checking alert 57 (All Pollers Disconnected): if alert 57 is also firing, fix worker provisioning first. If alert 57 is not firing, workers are healthy and the bottleneck is partition count — increase `matching.numTaskqueuePartitions`. |
 
-> **Alerts not planned:** Async Match Latency high/critical is intentionally omitted — schedule-to-start alerts (48/49 in Section 13) already cover the end-user impact. Task Write Throttle Count is omitted because it typically indicates worker shortage rather than partition count, making it redundant with Section 13. Sync Match Latency is omitted as it is most useful as a comparative signal alongside async match, not as a standalone alert.
+> **Alerts not planned:** Async Match Latency high/critical is intentionally omitted — schedule-to-start alerts (48/49 in Section 14) already cover the end-user impact. Task Write Throttle Count is omitted because it typically indicates worker shortage rather than partition count, making it redundant with Section 13. Sync Match Latency is omitted as it is most useful as a comparative signal alongside async match, not as a standalone alert.
 
 ---
 
-### Section 13 — SDK Workers Info
+### Section 14 — SDK Workers Info
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -295,7 +314,7 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 14 — Pollers
+### Section 15 — Pollers
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -304,7 +323,7 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 15 — Visibility
+### Section 16 — Visibility
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -316,13 +335,13 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 16 — Worker Registry (In-memory)
+### Section 17 — Worker Registry (In-memory)
 
-> **No alerts planned for this section.** The dashboard panels (Workers Added/Removed, cache utilization, activity slot usage) are useful for observing worker churn and registry capacity, but registry capacity issues are expected to surface first through Section 13 signals (schedule-to-start latency, task backlog). Consider adding a registry capacity saturation alert (utilization > 100% sustained) in a future iteration.
+> **No alerts planned for this section.** The dashboard panels (Workers Added/Removed, cache utilization, activity slot usage) are useful for observing worker churn and registry capacity, but registry capacity issues are expected to surface first through Section 14 signals (schedule-to-start latency, task backlog). Consider adding a registry capacity saturation alert (utilization > 100% sustained) in a future iteration.
 
 ---
 
-### Section 17 — Cluster Replication
+### Section 18 — Cluster Replication
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -337,7 +356,7 @@ Operators who want focused coverage without implementing the full alert inventor
 
 ---
 
-### Section 18 — Authorization
+### Section 19 — Authorization
 
 | # | Alert Name | Severity | Panel | Condition |
 |---|---|---|---|---|
@@ -350,9 +369,9 @@ Operators who want focused coverage without implementing the full alert inventor
 
 | Severity | Count |
 |---|---|
-| 🔴 Critical | 39 |
-| ⚠️ Warning | 40 |
-| **Total** | **79** |
+| 🔴 Critical | 43 |
+| ⚠️ Warning | 42 |
+| **Total** | **85** |
 
 ---
 
