@@ -249,8 +249,11 @@ Operators who want focused coverage without implementing the full alert inventor
 | 34d | Scheduled Queue Lag Critical | 🔴 Critical | Scheduled Queue Lag per Pod | p99 scheduled queue lag exceeds 30 minutes on any `instance + task_category` |
 | 34e | DB Pool Refresh Failure Elevated | 🔴 Critical | DB Pool Refresh Failure Rate per Pod | Any DB pool refresh failures detected — earliest signal for DB-caused stuck shards; fires before queue lag builds. SQL backends only. |
 | 34f | Shard Deadlock Detected | 🔴 Critical | Suspected Deadlocks per Pod | Any current suspected deadlocks on any history pod — `dd_current_suspected_deadlocks > 0` requires immediate pod restart. `noDataState: OK` — metric is event-driven and does not emit baseline zero. |
+| 34g | Task Scheduler Latency High | ⚠️ Warning | Task Scheduler Latency per Operation | p99 `task_latency_schedule` > 500ms sustained 5m — the host-level executor pool is starting to saturate. Most commonly caused by a namespace doing bulk operations (mass terminations, deletions) that consume all `history.transferProcessorSchedulerWorkerCount` goroutines (default 512). Not Essential Set: user impact surfaces first through service error rate or SDK schedule-to-start latency; remediation requires specific operational knowledge of `transferProcessorSchedulerWorkerCount`. |
+| 34h | Task Scheduler Latency Critical | 🔴 Critical | Task Scheduler Latency per Operation | p99 `task_latency_schedule` > 2s sustained 5m — executor pool is severely saturated; workflow progress is actively delayed across all namespaces sharing the pod. `for: 5m` required to avoid false positives from transient bulk-operation bursts. |
+| 34i | Task Scheduler Throttled | ⚠️ Warning | Task Scheduler Throttled Rate per Operation | Any sustained non-zero `task_scheduler_throttled` rate — tasks are being hard-rejected by the scheduler rather than queued, confirming the pool is at capacity. Use alongside 34g/34h: throttled rising with latency rising = structural saturation, not a burst. |
 
-> **Note:** All Shard Queue Health alerts aggregate `sum by (instance, task_category, le)` to preserve per-pod isolation. A stuck shard on one pod will not be diluted by healthy shards on other pods — the stuck pod's lag diverges visibly from the rest of the fleet. Alerts 34c–34e apply to SQL backends only (Cassandra does not expose DB pool refresh metrics). Alert 34f uses `noDataState: OK` — absence of data means no deadlocks detected, which is the healthy state.
+> **Note:** All Shard Queue Health alerts aggregate `sum by (instance, task_category, le)` to preserve per-pod isolation. A stuck shard on one pod will not be diluted by healthy shards on other pods — the stuck pod's lag diverges visibly from the rest of the fleet. Alerts 34c–34e apply to SQL backends only (Cassandra does not expose DB pool refresh metrics). Alert 34f uses `noDataState: OK` — absence of data means no deadlocks detected, which is the healthy state. Alerts 34g–34i are not in the Essential Set: the user-visible impact of scheduler saturation is already captured by alert 27 (Service Error Rate Critical) and SDK-side alerts 48/49 (schedule-to-start latency); remediation (tuning `history.transferProcessorSchedulerWorkerCount` via dynamic config, cell-level only, no restart required) requires operational knowledge not suited to an on-call runbook.
 
 ---
 
@@ -369,9 +372,9 @@ Operators who want focused coverage without implementing the full alert inventor
 
 | Severity | Count |
 |---|---|
-| 🔴 Critical | 43 |
-| ⚠️ Warning | 42 |
-| **Total** | **85** |
+| 🔴 Critical | 44 |
+| ⚠️ Warning | 44 |
+| **Total** | **88** |
 
 ---
 

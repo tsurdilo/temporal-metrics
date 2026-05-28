@@ -2730,6 +2730,124 @@
               "refId": "A"
             }
           ]
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "custom": {
+                "lineWidth": 2
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 500
+                  },
+                  {
+                    "color": "red",
+                    "value": 2000
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 36
+          },
+          "id": 2115,
+          "title": "Task Scheduler Latency per Operation",
+          "description": "In-memory schedule-to-start latency: time between a history task being loaded into memory and acquiring an executor worker (task_latency_schedule). Rises when history.transferProcessorSchedulerWorkerCount goroutines are fully saturated. A sustained rise on Transfer.* operations while other namespaces slow down indicates a bulk-processing workload (e.g. mass terminations or deletions) starving the shared worker pool. Operator response: temporarily reduce history.transferProcessorSchedulerWorkerCount via dynamic config — no restart required. Orange > 500ms, red > 2s.",
+          "type": "timeseries",
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "min",
+                "max",
+                "mean",
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile($p,\n  sum by (operation, le) (\n    rate(task_latency_schedule_bucket{service_name=\"history\"}[$__rate_interval])\n  )\n)",
+              "legendFormat": "{{operation}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "lineWidth": 2
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.001
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 36
+          },
+          "id": 2116,
+          "title": "Task Scheduler Throttled Rate per Operation",
+          "description": "Rate of tasks explicitly throttled by the host-level task scheduler (task_scheduler_throttled), broken down by operation. Complements Task Scheduler Latency — throttled tasks are turned away rather than queued, so any sustained non-zero rate means the scheduler is at capacity. Any non-zero value is worth investigating alongside the latency panel.",
+          "type": "timeseries",
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "min",
+                "max",
+                "mean",
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (operation) (\n  rate(task_scheduler_throttled{service_name=\"history\"}[$__rate_interval])\n)",
+              "legendFormat": "{{operation}}",
+              "refId": "A"
+            }
+          ]
         }
       ]
     },
@@ -6350,7 +6468,7 @@
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Temporal Server Dashboard v2.3.0",
+  "title": "Temporal Server Dashboard v2.4.0",
   "uid": "temporal-overview-v1",
   "version": 2,
   "weekStart": ""
