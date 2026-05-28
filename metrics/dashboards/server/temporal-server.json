@@ -49,7 +49,7 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "enable": true,
-        "expr": "increase(restarts{}[$__rate_interval]) > 0",
+        "expr": "increase(restarts{${cluster_label}=~\"$cluster\"}[$__rate_interval]) > 0",
         "hide": false,
         "iconColor": "red",
         "name": "Service Restarts",
@@ -140,7 +140,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (rate(action{namespace!=\"_unknown_\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(action{${cluster_label}=~\"$cluster\", namespace!=\"_unknown_\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -184,7 +184,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(action{}[$__rate_interval]))",
+              "expr": "sum(rate(action{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "total actions/s",
               "refId": "A"
             }
@@ -228,7 +228,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (rate(service_requests{service_name=\"frontend\",namespace!=\"_unknown_\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(service_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace!=\"_unknown_\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -294,7 +294,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_requests{service_name=\"frontend\"}[$__rate_interval]))",
+              "expr": "sum(rate(service_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\"}[$__rate_interval]))",
               "legendFormat": "total rps",
               "refId": "A"
             }
@@ -338,7 +338,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(state_transition_count_count{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum(rate(state_transition_count_count{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "state transitions/s",
               "refId": "A"
             }
@@ -441,7 +441,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(semaphore_latency_bucket{operation=\"ShardInfo\",service_name=\"history\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(semaphore_latency_bucket{${cluster_label}=~\"$cluster\", operation=\"ShardInfo\",service_name=\"history\"}[$__rate_interval])))",
               "legendFormat": "p{{p}} shard lock latency",
               "refId": "A"
             }
@@ -507,7 +507,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(cache_latency_bucket{operation=\"HistoryCacheGetOrCreate\"}[$__rate_interval])) by (le))",
+              "expr": "histogram_quantile($p, sum(rate(cache_latency_bucket{${cluster_label}=~\"$cluster\", operation=\"HistoryCacheGetOrCreate\"}[$__rate_interval])) by (le))",
               "legendFormat": "p{{p}} workflow lock latency",
               "refId": "A"
             }
@@ -588,7 +588,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_requests{namespace=\"$namespace\"}[$__rate_interval])) by (operation)",
+              "expr": "sum(rate(persistence_requests{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) by (operation)",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -654,7 +654,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_requests{}[$__rate_interval]))",
+              "expr": "sum(rate(persistence_requests{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "total requests/s",
               "refId": "A"
             }
@@ -698,7 +698,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_requests{}[$__rate_interval])) by (operation)",
+              "expr": "sum(rate(persistence_requests{${cluster_label}=~\"$cluster\"}[$__rate_interval])) by (operation)",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -764,7 +764,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(persistence_latency_bucket{namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(persistence_latency_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -808,7 +808,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_error_with_type{namespace=\"$namespace\"}[$__rate_interval])) by (operation, error_type)",
+              "expr": "sum(rate(persistence_error_with_type{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, error_type)",
               "legendFormat": "{{operation}} - {{error_type}}",
               "refId": "A"
             }
@@ -852,22 +852,22 @@
           },
           "targets": [
             {
-              "expr": "sum(persistence_sql_max_open_conn{})",
+              "expr": "sum(persistence_sql_max_open_conn{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "max open (configured)",
               "refId": "A"
             },
             {
-              "expr": "sum(persistence_sql_open_conn{})",
+              "expr": "sum(persistence_sql_open_conn{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "open",
               "refId": "B"
             },
             {
-              "expr": "sum(persistence_sql_idle_conn{})",
+              "expr": "sum(persistence_sql_idle_conn{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "idle",
               "refId": "C"
             },
             {
-              "expr": "sum(persistence_sql_in_use{})",
+              "expr": "sum(persistence_sql_in_use{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "in use",
               "refId": "D"
             }
@@ -911,7 +911,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_error_with_type{}[$__rate_interval])) by (operation, error_type)",
+              "expr": "sum(rate(persistence_error_with_type{${cluster_label}=~\"$cluster\"}[$__rate_interval])) by (operation, error_type)",
               "legendFormat": "{{operation}} - {{error_type}}",
               "refId": "A"
             }
@@ -970,7 +970,7 @@
           },
           "targets": [
             {
-              "expr": "100 - (sum(rate(persistence_errors{namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0)) / sum(rate(persistence_requests{namespace=\"$namespace\"}[$__rate_interval])) * 100)",
+              "expr": "100 - (sum(rate(persistence_errors{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0)) / sum(rate(persistence_requests{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) * 100)",
               "legendFormat": "availability %",
               "refId": "A"
             }
@@ -1073,7 +1073,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{service_name=\"frontend\", namespace=\"$namespace\", operation!~\"PollWorkflowTaskQueue|PollActivityTaskQueue\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{${cluster_label}=~\"$cluster\", service_name=\"frontend\", namespace=\"$namespace\", operation!~\"PollWorkflowTaskQueue|PollActivityTaskQueue\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1139,7 +1139,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{service_name=\"history\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{${cluster_label}=~\"$cluster\", service_name=\"history\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1183,7 +1183,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(service_latency_nouserlatency_bucket{service_name=\"frontend\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(service_latency_nouserlatency_bucket{${cluster_label}=~\"$cluster\", service_name=\"frontend\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1227,7 +1227,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(service_latency_userlatency_bucket{service_name=\"frontend\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(service_latency_userlatency_bucket{${cluster_label}=~\"$cluster\", service_name=\"frontend\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1293,7 +1293,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{service_name=\"matching\", namespace=\"$namespace\", operation!~\"PollWorkflowTaskQueue|PollActivityTaskQueue|MatchingClientGetTaskQueueUserData\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{${cluster_label}=~\"$cluster\", service_name=\"matching\", namespace=\"$namespace\", operation!~\"PollWorkflowTaskQueue|PollActivityTaskQueue|MatchingClientGetTaskQueueUserData\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1396,7 +1396,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_requests{service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0))",
+              "expr": "sum(rate(service_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0))",
               "legendFormat": "requests/s",
               "refId": "A"
             }
@@ -1440,7 +1440,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, operation) (rate(service_requests{service_name=\"frontend\",namespace!=\"_unknown_\"}[$__rate_interval]) or on () vector(0))",
+              "expr": "sum by (namespace, operation) (rate(service_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace!=\"_unknown_\"}[$__rate_interval]) or on () vector(0))",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -1484,7 +1484,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_errors{service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0))",
+              "expr": "sum(rate(service_errors{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0))",
               "legendFormat": "errors/s",
               "refId": "A"
             }
@@ -1528,7 +1528,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, operation) (rate(service_errors{service_name=\"frontend\",namespace!=\"_unknown_\"}[$__rate_interval]) or on () vector(0))",
+              "expr": "sum by (namespace, operation) (rate(service_errors{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace!=\"_unknown_\"}[$__rate_interval]) or on () vector(0))",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -1572,7 +1572,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (service_name) (service_grpc_conn_active{service_name=\"frontend\"})",
+              "expr": "sum by (service_name) (service_grpc_conn_active{${cluster_label}=~\"$cluster\", service_name=\"frontend\"})",
               "legendFormat": "{{service_name}}",
               "refId": "A"
             }
@@ -1616,12 +1616,12 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_grpc_conn_accepted{service_name=\"frontend\"}[$__rate_interval]))",
+              "expr": "sum(rate(service_grpc_conn_accepted{${cluster_label}=~\"$cluster\", service_name=\"frontend\"}[$__rate_interval]))",
               "legendFormat": "accepted/s",
               "refId": "A"
             },
             {
-              "expr": "sum(rate(service_grpc_conn_closed{service_name=\"frontend\"}[$__rate_interval]))",
+              "expr": "sum(rate(service_grpc_conn_closed{${cluster_label}=~\"$cluster\", service_name=\"frontend\"}[$__rate_interval]))",
               "legendFormat": "closed/s",
               "refId": "B"
             }
@@ -1683,7 +1683,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (service_name) (rate(service_panics{}[$__rate_interval]))",
+              "expr": "sum by (service_name) (rate(service_panics{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "{{service_name}}",
               "refId": "A"
             }
@@ -1727,7 +1727,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (error_type) (rate(service_error_with_type{service_name=\"frontend\"}[$__rate_interval]))",
+              "expr": "sum by (error_type) (rate(service_error_with_type{${cluster_label}=~\"$cluster\", service_name=\"frontend\"}[$__rate_interval]))",
               "legendFormat": "{{error_type}}",
               "refId": "A"
             }
@@ -1808,7 +1808,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_errors_resource_exhausted{namespace=\"$namespace\"}[$__rate_interval])) by (operation, resource_exhausted_cause)",
+              "expr": "sum(rate(service_errors_resource_exhausted{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) by (operation, resource_exhausted_cause)",
               "legendFormat": "{{operation}} - {{resource_exhausted_cause}}",
               "refId": "A"
             }
@@ -1852,12 +1852,12 @@
           },
           "targets": [
             {
-              "expr": "sum by (instance) (rate(service_requests{service_name=\"frontend\"}[$__rate_interval]))",
+              "expr": "sum by (instance) (rate(service_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\"}[$__rate_interval]))",
               "legendFormat": "actual - {{instance}}",
               "refId": "A"
             },
             {
-              "expr": "max by (instance) (host_rps_limit{service_name=\"frontend\"})",
+              "expr": "max by (instance) (host_rps_limit{${cluster_label}=~\"$cluster\", service_name=\"frontend\"})",
               "legendFormat": "limit - {{instance}}",
               "refId": "B"
             }
@@ -1901,12 +1901,12 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (rate(service_requests{service_name=\"frontend\",namespace=\"$namespace\",namespace!=\"_unknown_\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(service_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace=\"$namespace\",namespace!=\"_unknown_\"}[$__rate_interval]))",
               "legendFormat": "actual - {{namespace}}",
               "refId": "A"
             },
             {
-              "expr": "max by (namespace, instance) (namespace_host_rps_limit{service_name=\"frontend\",namespace!=\"_unknown_\"})",
+              "expr": "max by (namespace, instance) (namespace_host_rps_limit{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace!=\"_unknown_\"})",
               "legendFormat": "limit - {{namespace}} {{instance}}",
               "refId": "B"
             }
@@ -1987,7 +1987,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(task_errors_discarded{operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum(rate(task_errors_discarded{${cluster_label}=~\"$cluster\", operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "discarded errors/s",
               "refId": "A"
             }
@@ -2031,7 +2031,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(task_errors_limit_exceeded_counter{operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum(rate(task_errors_limit_exceeded_counter{${cluster_label}=~\"$cluster\", operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "limit exceeded/s",
               "refId": "A"
             }
@@ -2075,7 +2075,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(task_errors_workflow_busy{operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum(rate(task_errors_workflow_busy{${cluster_label}=~\"$cluster\", operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "workflow busy/s",
               "refId": "A"
             }
@@ -2119,7 +2119,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(task_errors_throttled{operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, resource_exhausted_cause)",
+              "expr": "sum(rate(task_errors_throttled{${cluster_label}=~\"$cluster\", operation=~\"TransferActive.*\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, resource_exhausted_cause)",
               "legendFormat": "{{namespace}} - {{resource_exhausted_cause}}",
               "refId": "A"
             }
@@ -2200,7 +2200,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(sharditem_created_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(sharditem_created_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shards created/s",
               "refId": "A"
             }
@@ -2244,7 +2244,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(sharditem_removed_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(sharditem_removed_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shards removed/s",
               "refId": "A"
             }
@@ -2288,7 +2288,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(shard_closed_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(shard_closed_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shards closed/s",
               "refId": "A"
             }
@@ -2332,7 +2332,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (service_name) (increase(restarts{}[$__rate_interval]))",
+              "expr": "sum by (service_name) (increase(restarts{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "{{service_name}}",
               "refId": "A"
             }
@@ -2430,7 +2430,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_immediate_queue_lag_bucket{service_name=\"history\"}[11m])\n  )\n)",
+              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_immediate_queue_lag_bucket{${cluster_label}=~\"$cluster\", service_name=\"history\"}[11m])\n  )\n)",
               "legendFormat": "{{instance}} \u2014 {{task_category}}",
               "refId": "A"
             }
@@ -2491,7 +2491,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_scheduled_queue_lag_bucket{service_name=\"history\"}[11m])\n  )\n)",
+              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_scheduled_queue_lag_bucket{${cluster_label}=~\"$cluster\", service_name=\"history\"}[11m])\n  )\n)",
               "legendFormat": "{{instance}} \u2014 {{task_category}}",
               "refId": "A"
             }
@@ -2548,7 +2548,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (instance) (\n  rate(persistence_session_refresh_failures{service_name=\"history\"}[$__rate_interval])\n)",
+              "expr": "sum by (instance) (\n  rate(persistence_session_refresh_failures{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])\n)",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
@@ -2611,7 +2611,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (instance) (rate(persistence_session_refresh_failures{service_name=\"history\"}[$__rate_interval]))\n/\nsum by (instance) (rate(persistence_session_refresh_attempts{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum by (instance) (rate(persistence_session_refresh_failures{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))\n/\nsum by (instance) (rate(persistence_session_refresh_attempts{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
@@ -2668,7 +2668,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (instance) (\n  dd_current_suspected_deadlocks{service_name=\"history\"}\n)",
+              "expr": "sum by (instance) (\n  dd_current_suspected_deadlocks{${cluster_label}=~\"$cluster\", service_name=\"history\"}\n)",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
@@ -2725,7 +2725,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (instance) (\n  rate(dd_suspected_deadlocks{service_name=\"history\"}[$__rate_interval])\n)",
+              "expr": "sum by (instance) (\n  rate(dd_suspected_deadlocks{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])\n)",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
@@ -2806,7 +2806,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(task_requests{operation=~\"TimerActive.*\"}[$__rate_interval]))",
+              "expr": "sum(rate(task_requests{${cluster_label}=~\"$cluster\", operation=~\"TimerActive.*\"}[$__rate_interval]))",
               "legendFormat": "tasks/s",
               "refId": "A"
             }
@@ -2850,7 +2850,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(task_errors{operation=~\"TimerActive.*\"}[$__rate_interval]))",
+              "expr": "sum(rate(task_errors{${cluster_label}=~\"$cluster\", operation=~\"TimerActive.*\"}[$__rate_interval]))",
               "legendFormat": "errors/s",
               "refId": "A"
             }
@@ -2916,7 +2916,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (operation, le) (rate(task_latency_processing_bucket{operation=~\"TimerActive.*\",service_name=\"history\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (operation, le) (rate(task_latency_processing_bucket{${cluster_label}=~\"$cluster\", operation=~\"TimerActive.*\",service_name=\"history\"}[$__rate_interval])))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -2960,7 +2960,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (operation, le) (rate(shardinfo_scheduled_queue_lag_bucket{task_category=\"timer\",service_name=\"history\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (operation, le) (rate(shardinfo_scheduled_queue_lag_bucket{${cluster_label}=~\"$cluster\", task_category=\"timer\",service_name=\"history\"}[$__rate_interval])))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -3046,7 +3046,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(workflow_success{namespace=\"$namespace\"}[$__range]) or on () vector(0))",
+              "expr": "sum(increase(workflow_success{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__range]) or on () vector(0))",
               "legendFormat": "total",
               "refId": "A"
             }
@@ -3095,7 +3095,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(workflow_cancel{namespace=\"$namespace\"}[$__range]) or on () vector(0))",
+              "expr": "sum(increase(workflow_cancel{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__range]) or on () vector(0))",
               "legendFormat": "total",
               "refId": "A"
             }
@@ -3148,7 +3148,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(workflow_failed{namespace=\"$namespace\"}[$__range]) or on () vector(0))",
+              "expr": "sum(increase(workflow_failed{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__range]) or on () vector(0))",
               "legendFormat": "total",
               "refId": "A"
             }
@@ -3201,7 +3201,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(workflow_timeout{namespace=\"$namespace\"}[$__range]) or on () vector(0))",
+              "expr": "sum(increase(workflow_timeout{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__range]) or on () vector(0))",
               "legendFormat": "total",
               "refId": "A"
             }
@@ -3254,7 +3254,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(workflow_terminate{namespace=\"$namespace\"}[$__range]) or on () vector(0))",
+              "expr": "sum(increase(workflow_terminate{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__range]) or on () vector(0))",
               "legendFormat": "total",
               "refId": "A"
             }
@@ -3303,7 +3303,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(workflow_continued_as_new{namespace=\"$namespace\"}[$__range]) or on () vector(0))",
+              "expr": "sum(increase(workflow_continued_as_new{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__range]) or on () vector(0))",
               "legendFormat": "total",
               "refId": "A"
             }
@@ -3365,17 +3365,17 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (rate(wf_too_many_pending_activities{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(wf_too_many_pending_activities{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "too many pending activities",
               "refId": "A"
             },
             {
-              "expr": "sum by (namespace) (rate(wf_too_many_pending_child_workflows{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(wf_too_many_pending_child_workflows{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "too many pending child workflows",
               "refId": "B"
             },
             {
-              "expr": "sum by (namespace) (rate(wf_too_many_pending_cancel_requests{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(wf_too_many_pending_cancel_requests{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "too many pending cancel requests",
               "refId": "C"
             }
@@ -3437,7 +3437,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (rate(blob_size_error{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(blob_size_error{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3540,7 +3540,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(history_size_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(history_size_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3606,7 +3606,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(history_count_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(history_count_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3672,7 +3672,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(mutable_state_size_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(mutable_state_size_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3716,7 +3716,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(persisted_mutable_state_size_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(persisted_mutable_state_size_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3760,7 +3760,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(event_blob_size_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(event_blob_size_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3804,7 +3804,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(search_attributes_size_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(search_attributes_size_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3848,7 +3848,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(memo_size_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (namespace, le) (rate(memo_size_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -3945,7 +3945,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (operation, le) (rate(asyncmatch_latency_bucket{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (operation, le) (rate(asyncmatch_latency_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval])))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -3989,7 +3989,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (operation, le) (rate(syncmatch_latency_bucket{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (operation, le) (rate(syncmatch_latency_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval])))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -4051,7 +4051,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, task_type) (rate(sync_throttle_count{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval]))",
+              "expr": "sum by (namespace, task_type) (rate(sync_throttle_count{${cluster_label}=~\"$cluster\", namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}} - {{task_type}}",
               "refId": "A"
             }
@@ -4113,7 +4113,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, task_type) (rate(task_write_throttle_count{namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval]))",
+              "expr": "sum by (namespace, task_type) (rate(task_write_throttle_count{${cluster_label}=~\"$cluster\", namespace=\"$namespace\", service_name=~\"matching\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}} - {{task_type}}",
               "refId": "A"
             }
@@ -4222,7 +4222,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(task_schedule_to_start_latency_bucket{namespace=\"$namespace\"}[$__rate_interval])) by (task_type, operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(task_schedule_to_start_latency_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])) by (task_type, operation, le))",
               "legendFormat": "{{task_type}} - {{operation}}",
               "refId": "A"
             }
@@ -4288,7 +4288,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_requests{operation=\"CreateTasks\",namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum(rate(persistence_requests{${cluster_label}=~\"$cluster\", operation=\"CreateTasks\",namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "tasks persisted/s",
               "refId": "A"
             }
@@ -4332,7 +4332,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (operation, le) (rate(syncmatch_latency_bucket{namespace=\"$namespace\",service_name=~\"matching\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (operation, le) (rate(syncmatch_latency_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\",service_name=~\"matching\"}[$__rate_interval])))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -4376,7 +4376,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(start_to_close_timeout{operation=\"TimerActiveTaskActivityTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
+              "expr": "sum(rate(start_to_close_timeout{${cluster_label}=~\"$cluster\", operation=\"TimerActiveTaskActivityTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -4420,7 +4420,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(schedule_to_start_timeout{operation=\"TimerActiveTaskActivityTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
+              "expr": "sum(rate(schedule_to_start_timeout{${cluster_label}=~\"$cluster\", operation=\"TimerActiveTaskActivityTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -4464,7 +4464,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(heartbeat_timeout{operation=\"TimerActiveTaskActivityTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
+              "expr": "sum(rate(heartbeat_timeout{${cluster_label}=~\"$cluster\", operation=\"TimerActiveTaskActivityTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -4508,7 +4508,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(start_to_close_timeout{operation=\"TimerActiveTaskWorkflowTaskTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
+              "expr": "sum(rate(start_to_close_timeout{${cluster_label}=~\"$cluster\", operation=\"TimerActiveTaskWorkflowTaskTimeout\",namespace=\"$namespace\"}[$__rate_interval])) by (namespace, operation)",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -4574,7 +4574,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, task_type) (approximate_backlog_count{service_name=~\"matching\",namespace=\"$namespace\"})",
+              "expr": "sum by (namespace, task_type) (approximate_backlog_count{${cluster_label}=~\"$cluster\", service_name=~\"matching\",namespace=\"$namespace\"})",
               "legendFormat": "{{namespace}} - {{task_type}}",
               "refId": "A"
             }
@@ -4654,7 +4654,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (service_pending_requests{service_name=\"frontend\",namespace=\"$namespace\"})",
+              "expr": "sum by (namespace) (service_pending_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace=\"$namespace\"})",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -4697,7 +4697,7 @@
           },
           "targets": [
             {
-              "expr": "max by (instance) (service_pending_requests{service_name=\"frontend\",namespace=\"$namespace\"})",
+              "expr": "max by (instance) (service_pending_requests{${cluster_label}=~\"$cluster\", service_name=\"frontend\",namespace=\"$namespace\"})",
               "legendFormat": "{{instance}}",
               "refId": "A"
             }
@@ -4800,7 +4800,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(task_latency_bucket{operation=~\"VisibilityTask.*\",service_name=\"history\",namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(task_latency_bucket{${cluster_label}=~\"$cluster\", operation=~\"VisibilityTask.*\",service_name=\"history\",namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -4859,7 +4859,7 @@
           },
           "targets": [
             {
-              "expr": "100 - (sum(rate(service_errors{operation=~\"ListOpenWorkflowExecutions|ListClosedWorkflowExecutions|ListWorkflowExecutions|ScanWorkflowExecutions|CountWorkflowExecutions\",service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0)) / sum(rate(service_requests{operation=~\"ListOpenWorkflowExecutions|ListClosedWorkflowExecutions|ListWorkflowExecutions|ScanWorkflowExecutions|CountWorkflowExecutions\",service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval])) * 100)",
+              "expr": "100 - (sum(rate(service_errors{${cluster_label}=~\"$cluster\", operation=~\"ListOpenWorkflowExecutions|ListClosedWorkflowExecutions|ListWorkflowExecutions|ScanWorkflowExecutions|CountWorkflowExecutions\",service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval]) or on () vector(0)) / sum(rate(service_requests{${cluster_label}=~\"$cluster\", operation=~\"ListOpenWorkflowExecutions|ListClosedWorkflowExecutions|ListWorkflowExecutions|ScanWorkflowExecutions|CountWorkflowExecutions\",service_name=\"frontend\",namespace=\"$namespace\"}[$__rate_interval])) * 100)",
               "legendFormat": "availability %",
               "refId": "A"
             }
@@ -4925,7 +4925,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(task_latency_queue_bucket{operation=~\"VisibilityTask.*\",service_name=\"history\",namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(task_latency_queue_bucket{${cluster_label}=~\"$cluster\", operation=~\"VisibilityTask.*\",service_name=\"history\",namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -4991,7 +4991,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(task_latency_bucket{operation=~\"VisibilityTask.*\",service_name=\"history\",namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(task_latency_bucket{${cluster_label}=~\"$cluster\", operation=~\"VisibilityTask.*\",service_name=\"history\",namespace=\"$namespace\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -5075,7 +5075,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(worker_registry_workers_added{service_name=\"matching\"}[$__rate_interval]))",
+              "expr": "sum(rate(worker_registry_workers_added{${cluster_label}=~\"$cluster\", service_name=\"matching\"}[$__rate_interval]))",
               "legendFormat": "workers added/s",
               "refId": "A"
             }
@@ -5122,7 +5122,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(worker_registry_workers_removed{service_name=\"matching\"}[$__rate_interval]))",
+              "expr": "sum(rate(worker_registry_workers_removed{${cluster_label}=~\"$cluster\", service_name=\"matching\"}[$__rate_interval]))",
               "legendFormat": "workers removed/s",
               "refId": "A"
             }
@@ -5169,7 +5169,7 @@
           },
           "targets": [
             {
-              "expr": "quantile($p, worker_registry_capacity_utilization{service_name=\"matching\"}) * 1e6",
+              "expr": "quantile($p, worker_registry_capacity_utilization{${cluster_label}=~\"$cluster\", service_name=\"matching\"}) * 1e6",
               "legendFormat": "p{{$p}} cached entries",
               "refId": "A"
             }
@@ -5235,7 +5235,7 @@
           },
           "targets": [
             {
-              "expr": "quantile($p, worker_registry_capacity_utilization{service_name=\"matching\"}) * 100",
+              "expr": "quantile($p, worker_registry_capacity_utilization{${cluster_label}=~\"$cluster\", service_name=\"matching\"}) * 100",
               "legendFormat": "p{{$p}} utilization %",
               "refId": "A"
             }
@@ -5282,7 +5282,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(worker_registry_activity_slots_used_bucket{service_name=\"matching\"}[$__rate_interval])) by (le))",
+              "expr": "histogram_quantile($p, sum(rate(worker_registry_activity_slots_used_bucket{${cluster_label}=~\"$cluster\", service_name=\"matching\"}[$__rate_interval])) by (le))",
               "legendFormat": "p{{$p}} activity slots used",
               "refId": "A"
             }
@@ -5363,22 +5363,22 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(replication_tasks_recv{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_tasks_recv{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "received/s",
               "refId": "A"
             },
             {
-              "expr": "sum(rate(replication_tasks_applied{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_tasks_applied{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "applied/s",
               "refId": "B"
             },
             {
-              "expr": "sum(rate(replication_tasks_failed{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_tasks_failed{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "failed/s",
               "refId": "C"
             },
             {
-              "expr": "sum(rate(replication_tasks_skipped{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_tasks_skipped{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "skipped/s",
               "refId": "D"
             }
@@ -5422,12 +5422,12 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(replication_tasks_back_fill{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_tasks_back_fill{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "backfill/s",
               "refId": "A"
             },
             {
-              "expr": "sum(rate(duplicate_replication_events{}[$__rate_interval]))",
+              "expr": "sum(rate(duplicate_replication_events{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "duplicate events/s",
               "refId": "B"
             }
@@ -5471,12 +5471,12 @@
           },
           "targets": [
             {
-              "expr": "avg(replication_task_send_backlog_sum / replication_task_send_backlog_count)",
+              "expr": "avg(replication_task_send_backlog_sum{${cluster_label}=~\"$cluster\"} / replication_task_send_backlog_count{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "send backlog",
               "refId": "A"
             },
             {
-              "expr": "avg(replication_tasks_recv_backlog_sum / replication_tasks_recv_backlog_count)",
+              "expr": "avg(replication_tasks_recv_backlog_sum{${cluster_label}=~\"$cluster\"} / replication_tasks_recv_backlog_count{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "recv backlog",
               "refId": "B"
             }
@@ -5520,12 +5520,12 @@
           },
           "targets": [
             {
-              "expr": "avg(replication_tasks_fetched_sum / replication_tasks_fetched_count)",
+              "expr": "avg(replication_tasks_fetched_sum{${cluster_label}=~\"$cluster\"} / replication_tasks_fetched_count{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "fetched per batch",
               "refId": "A"
             },
             {
-              "expr": "avg(replication_tasks_attempt_sum / replication_tasks_attempt_count)",
+              "expr": "avg(replication_tasks_attempt_sum{${cluster_label}=~\"$cluster\"} / replication_tasks_attempt_count{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "attempts per task",
               "refId": "B"
             }
@@ -5591,27 +5591,27 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "end-to-end",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_send_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_send_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "send",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_queue_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_queue_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "queue",
               "refId": "C"
             },
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_processing_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_processing_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "processing",
               "refId": "D"
             },
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_transmission_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_transmission_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "transmission",
               "refId": "E"
             }
@@ -5655,7 +5655,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_tasks_back_fill_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_tasks_back_fill_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "backfill latency",
               "refId": "A"
             }
@@ -5699,7 +5699,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (error_type) (rate(replication_tasks_error_by_type{}[$__rate_interval]))",
+              "expr": "sum by (error_type) (rate(replication_tasks_error_by_type{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "{{error_type}}",
               "refId": "A"
             }
@@ -5761,22 +5761,22 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(replication_stream_stuck{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_stream_stuck{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "stream stuck/s",
               "refId": "A"
             },
             {
-              "expr": "sum(rate(replication_stream_error{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_stream_error{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "stream errors/s",
               "refId": "B"
             },
             {
-              "expr": "sum(rate(replication_stream_panic{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_stream_panic{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "stream panics/s",
               "refId": "C"
             },
             {
-              "expr": "sum(rate(replication_stream_channel_full{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_stream_channel_full{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "channel full/s",
               "refId": "D"
             }
@@ -5842,7 +5842,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_sender_rate_limit_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_sender_rate_limit_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "rate limit latency",
               "refId": "A"
             }
@@ -5908,12 +5908,12 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_generation_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_generation_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "generation",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_load_latency_bucket{}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (le) (rate(replication_task_load_latency_bucket{${cluster_label}=~\"$cluster\"}[$__rate_interval])))",
               "legendFormat": "load",
               "refId": "B"
             }
@@ -5957,7 +5957,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace) (rate(replication_outlier_namespace{namespace!=\"_unknown_\"}[$__rate_interval]))",
+              "expr": "sum by (namespace) (rate(replication_outlier_namespace{${cluster_label}=~\"$cluster\", namespace!=\"_unknown_\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}}",
               "refId": "A"
             }
@@ -6019,12 +6019,12 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(replication_dlq_failed{}[$__rate_interval]))",
+              "expr": "sum(rate(replication_dlq_failed{${cluster_label}=~\"$cluster\"}[$__rate_interval]))",
               "legendFormat": "DLQ enqueue failures/s",
               "refId": "A"
             },
             {
-              "expr": "max(replication_dlq_non_empty{})",
+              "expr": "max(replication_dlq_non_empty{${cluster_label}=~\"$cluster\"})",
               "legendFormat": "DLQ non-empty",
               "refId": "B"
             }
@@ -6123,7 +6123,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, operation) (rate(service_errors_unauthorized{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum by (namespace, operation) (rate(service_errors_unauthorized{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -6185,7 +6185,7 @@
           },
           "targets": [
             {
-              "expr": "sum by (namespace, operation) (rate(service_errors_authorize_failed{namespace=\"$namespace\"}[$__rate_interval]))",
+              "expr": "sum by (namespace, operation) (rate(service_errors_authorize_failed{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval]))",
               "legendFormat": "{{namespace}} - {{operation}}",
               "refId": "A"
             }
@@ -6251,7 +6251,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum by (operation, le) (rate(service_authorization_latency_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+              "expr": "histogram_quantile($p, sum by (operation, le) (rate(service_authorization_latency_bucket{${cluster_label}=~\"$cluster\", namespace=\"$namespace\"}[$__rate_interval])))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -6282,18 +6282,66 @@
         "type": "datasource"
       },
       {
+        "hide": 2,
+        "name": "cluster_label",
+        "label": "Cluster label",
+        "description": "Prometheus label name that identifies the cluster. Edit this if your metrics use a different label (e.g. cluster_id, cluster).",
+        "query": "clusterId",
+        "current": {
+          "text": "clusterId",
+          "value": "clusterId",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "clusterId",
+            "value": "clusterId",
+            "selected": true
+          }
+        ],
+        "type": "constant"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(${cluster_label})",
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(${cluster_label})",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
         "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(service_requests{namespace!=\"_unknown_\"}, namespace)",
+        "definition": "label_values(service_requests{${cluster_label}=~\"$cluster\", namespace!=\"_unknown_\"}, namespace)",
         "hide": 0,
         "includeAll": false,
         "label": "Namespace",
         "multi": false,
         "name": "namespace",
-        "query": "label_values(service_requests{namespace!=\"_unknown_\"}, namespace)",
+        "query": "label_values(service_requests{${cluster_label}=~\"$cluster\", namespace!=\"_unknown_\"}, namespace)",
         "refresh": 2,
         "sort": 1,
         "type": "query"

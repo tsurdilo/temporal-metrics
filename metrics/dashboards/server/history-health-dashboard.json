@@ -61,7 +61,7 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "enable": true,
-        "expr": "increase(restarts{service_name=\"history\"}[$__rate_interval]) > 0",
+        "expr": "increase(restarts{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]) > 0",
         "hide": false,
         "iconColor": "red",
         "name": "History Service Restarts",
@@ -173,7 +173,7 @@
       },
       "targets": [
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 2, 1)) or vector(0)",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 2, 1)) or vector(0)",
           "legendFormat": "not_serving",
           "refId": "A"
         }
@@ -233,7 +233,7 @@
       },
       "targets": [
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 3, 1)) or vector(0)",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 3, 1)) or vector(0)",
           "legendFormat": "declined_serving",
           "refId": "A"
         }
@@ -289,7 +289,7 @@
       },
       "targets": [
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 1, 1)) or vector(0)",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 1, 1)) or vector(0)",
           "legendFormat": "serving",
           "refId": "A"
         }
@@ -345,7 +345,7 @@
       },
       "targets": [
         {
-          "expr": "count(host_health{service_name=\"history\"}) or vector(0)",
+          "expr": "count(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"}) or vector(0)",
           "legendFormat": "total pods",
           "refId": "A"
         }
@@ -405,7 +405,7 @@
       },
       "targets": [
         {
-          "expr": "time() - max(timestamp(host_health{service_name=\"history\"}))",
+          "expr": "time() - max(timestamp(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"}))",
           "legendFormat": "seconds since last update",
           "refId": "A"
         }
@@ -495,17 +495,17 @@
       },
       "targets": [
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 1, 1))",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 1, 1))",
           "legendFormat": "serving",
           "refId": "A"
         },
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 2, 1))",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 2, 1))",
           "legendFormat": "not_serving",
           "refId": "B"
         },
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 3, 1))",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 3, 1))",
           "legendFormat": "declined_serving",
           "refId": "C"
         }
@@ -618,17 +618,17 @@
       },
       "targets": [
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 1, 1)) / scalar(count(host_health{service_name=\"history\"})) * 100",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 1, 1)) / scalar(count(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"})) * 100",
           "legendFormat": "serving %",
           "refId": "A"
         },
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 2, 1)) / scalar(count(host_health{service_name=\"history\"})) * 100",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 2, 1)) / scalar(count(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"})) * 100",
           "legendFormat": "not_serving %",
           "refId": "B"
         },
         {
-          "expr": "sum(clamp_max(host_health{service_name=\"history\"} == 3, 1)) / scalar(count(host_health{service_name=\"history\"})) * 100",
+          "expr": "sum(clamp_max(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"} == 3, 1)) / scalar(count(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"})) * 100",
           "legendFormat": "declined_serving %",
           "refId": "C"
         }
@@ -720,7 +720,7 @@
       ],
       "targets": [
         {
-          "expr": "host_health{service_name=\"history\"}",
+          "expr": "host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"}",
           "legendFormat": "{{pod}}",
           "instant": true,
           "refId": "A"
@@ -781,7 +781,7 @@
       },
       "targets": [
         {
-          "expr": "clamp_min(max_over_time(count(host_health{service_name=\"history\"})[1h:1m]) - (count(host_health{service_name=\"history\"}) or vector(0)), 0)",
+          "expr": "clamp_min(max_over_time(count(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"})[1h:1m]) - (count(host_health{${cluster_label}=~\"$cluster\", service_name=\"history\"}) or vector(0)), 0)",
           "legendFormat": "pods missing",
           "refId": "A"
         }
@@ -871,7 +871,7 @@
           },
           "targets": [
             {
-              "expr": "sum(kube_pod_status_ready{namespace=\"$k8s_namespace\", pod=~\".*frontend.*\", condition=\"true\"})",
+              "expr": "sum(kube_pod_status_ready{${cluster_label}=~\"$cluster\", namespace=\"$k8s_namespace\", pod=~\".*frontend.*\", condition=\"true\"})",
               "legendFormat": "ready",
               "refId": "A"
             }
@@ -926,7 +926,7 @@
           },
           "targets": [
             {
-              "expr": "sum(kube_pod_status_ready{namespace=\"$k8s_namespace\", pod=~\".*history.*\", condition=\"true\"})",
+              "expr": "sum(kube_pod_status_ready{${cluster_label}=~\"$cluster\", namespace=\"$k8s_namespace\", pod=~\".*history.*\", condition=\"true\"})",
               "legendFormat": "ready",
               "refId": "A"
             }
@@ -981,7 +981,7 @@
           },
           "targets": [
             {
-              "expr": "sum(kube_pod_status_ready{namespace=\"$k8s_namespace\", pod=~\".*matching.*\", condition=\"true\"})",
+              "expr": "sum(kube_pod_status_ready{${cluster_label}=~\"$cluster\", namespace=\"$k8s_namespace\", pod=~\".*matching.*\", condition=\"true\"})",
               "legendFormat": "ready",
               "refId": "A"
             }
@@ -1071,17 +1071,17 @@
           },
           "targets": [
             {
-              "expr": "sum(kube_pod_status_ready{namespace=\"$k8s_namespace\", pod=~\".*frontend.*\", condition=\"true\"})",
+              "expr": "sum(kube_pod_status_ready{${cluster_label}=~\"$cluster\", namespace=\"$k8s_namespace\", pod=~\".*frontend.*\", condition=\"true\"})",
               "legendFormat": "frontend",
               "refId": "A"
             },
             {
-              "expr": "sum(kube_pod_status_ready{namespace=\"$k8s_namespace\", pod=~\".*history.*\", condition=\"true\"})",
+              "expr": "sum(kube_pod_status_ready{${cluster_label}=~\"$cluster\", namespace=\"$k8s_namespace\", pod=~\".*history.*\", condition=\"true\"})",
               "legendFormat": "history",
               "refId": "B"
             },
             {
-              "expr": "sum(kube_pod_status_ready{namespace=\"$k8s_namespace\", pod=~\".*matching.*\", condition=\"true\"})",
+              "expr": "sum(kube_pod_status_ready{${cluster_label}=~\"$cluster\", namespace=\"$k8s_namespace\", pod=~\".*matching.*\", condition=\"true\"})",
               "legendFormat": "matching",
               "refId": "C"
             }
@@ -1184,7 +1184,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(persistence_latency_bucket{service_name=\"history\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(persistence_latency_bucket{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1231,7 +1231,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_error_with_type{service_name=\"history\"}[$__rate_interval])) by (operation, error_type)",
+              "expr": "sum(rate(persistence_error_with_type{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])) by (operation, error_type)",
               "legendFormat": "{{operation}} - {{error_type}}",
               "refId": "A"
             }
@@ -1290,7 +1290,7 @@
           },
           "targets": [
             {
-              "expr": "100 - (sum(rate(persistence_errors{service_name=\"history\"}[$__rate_interval]) or on () vector(0)) / sum(rate(persistence_requests{service_name=\"history\"}[$__rate_interval])) * 100)",
+              "expr": "100 - (sum(rate(persistence_errors{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]) or on () vector(0)) / sum(rate(persistence_requests{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])) * 100)",
               "legendFormat": "availability %",
               "refId": "A"
             }
@@ -1337,22 +1337,22 @@
           },
           "targets": [
             {
-              "expr": "sum(persistence_sql_max_open_conn{service_name=\"history\"})",
+              "expr": "sum(persistence_sql_max_open_conn{${cluster_label}=~\"$cluster\", service_name=\"history\"})",
               "legendFormat": "max open (configured)",
               "refId": "A"
             },
             {
-              "expr": "sum(persistence_sql_open_conn{service_name=\"history\"})",
+              "expr": "sum(persistence_sql_open_conn{${cluster_label}=~\"$cluster\", service_name=\"history\"})",
               "legendFormat": "open",
               "refId": "B"
             },
             {
-              "expr": "sum(persistence_sql_idle_conn{service_name=\"history\"})",
+              "expr": "sum(persistence_sql_idle_conn{${cluster_label}=~\"$cluster\", service_name=\"history\"})",
               "legendFormat": "idle",
               "refId": "C"
             },
             {
-              "expr": "sum(persistence_sql_in_use{service_name=\"history\"})",
+              "expr": "sum(persistence_sql_in_use{${cluster_label}=~\"$cluster\", service_name=\"history\"})",
               "legendFormat": "in use",
               "refId": "D"
             }
@@ -1414,7 +1414,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_session_refresh_attempts{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(persistence_session_refresh_attempts{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "refresh attempts/s",
               "refId": "A"
             }
@@ -1476,7 +1476,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(persistence_session_refresh_failures{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(persistence_session_refresh_failures{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "refresh failures/s",
               "refId": "A"
             }
@@ -1579,7 +1579,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{service_name=\"history\"}[$__rate_interval])) by (operation, le))",
+              "expr": "histogram_quantile($p, sum(rate(service_latency_bucket{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])) by (operation, le))",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
@@ -1626,7 +1626,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_error_with_type{service_name=\"history\"}[$__rate_interval])) by (error_type)",
+              "expr": "sum(rate(service_error_with_type{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])) by (error_type)",
               "legendFormat": "{{error_type}}",
               "refId": "A"
             }
@@ -1688,7 +1688,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_errors_shard_ownership_lost{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(service_errors_shard_ownership_lost{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shard ownership lost/s",
               "refId": "A"
             }
@@ -1735,7 +1735,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(membership_changed_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(membership_changed_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "membership changes/s",
               "refId": "A"
             }
@@ -1797,7 +1797,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(service_panics{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(service_panics{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "panics/s",
               "refId": "A"
             }
@@ -1881,7 +1881,7 @@
           },
           "targets": [
             {
-              "expr": "numshards_gauge{service_name=\"history\"}",
+              "expr": "numshards_gauge{${cluster_label}=~\"$cluster\", service_name=\"history\"}",
               "legendFormat": "{{pod}}",
               "refId": "A"
             }
@@ -1928,7 +1928,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p, sum(rate(acquire_shards_latency_bucket{service_name=\"history\"}[$__rate_interval])) by (le))",
+              "expr": "histogram_quantile($p, sum(rate(acquire_shards_latency_bucket{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval])) by (le))",
               "legendFormat": "p{{p}} acquisition latency",
               "refId": "A"
             }
@@ -1975,7 +1975,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(sharditem_created_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(sharditem_created_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shards created/s",
               "refId": "A"
             }
@@ -2022,7 +2022,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(sharditem_removed_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(sharditem_removed_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shards removed/s",
               "refId": "A"
             }
@@ -2069,7 +2069,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(shard_closed_count{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(rate(shard_closed_count{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "shards closed/s",
               "refId": "A"
             }
@@ -2116,7 +2116,7 @@
           },
           "targets": [
             {
-              "expr": "sum(increase(restarts{service_name=\"history\"}[$__rate_interval]))",
+              "expr": "sum(increase(restarts{${cluster_label}=~\"$cluster\", service_name=\"history\"}[$__rate_interval]))",
               "legendFormat": "restarts",
               "refId": "A"
             }
@@ -2146,6 +2146,54 @@
         "query": "prometheus",
         "refresh": 1,
         "type": "datasource"
+      },
+      {
+        "hide": 2,
+        "name": "cluster_label",
+        "label": "Cluster label",
+        "description": "Prometheus label name that identifies the cluster. Edit this if your metrics use a different label (e.g. cluster_id, cluster).",
+        "query": "clusterId",
+        "current": {
+          "text": "clusterId",
+          "value": "clusterId",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "clusterId",
+            "value": "clusterId",
+            "selected": true
+          }
+        ],
+        "type": "constant"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all",
+          "selected": true
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(${cluster_label})",
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(${cluster_label})",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
       },
       {
         "current": {},
