@@ -90,7 +90,7 @@ All expressions are derived from the corresponding dashboard panel queries with 
 | 30 | 1m | `sum(rate(service_errors_resource_exhausted{resource_exhausted_cause=~"RESOURCE_EXHAUSTED_CAUSE_SYSTEM_OVERLOADED\|RESOURCE_EXHAUSTED_CAUSE_CIRCUIT_BREAKER_OPEN"}[5m])) > 0` |
 | 33 | — | removed from Essential Set — replication-only metric, not applicable to single active cluster |
 | 34 | 10m | `(sum(rate(sharditem_created_count{service_name="history"}[5m])) + sum(rate(sharditem_removed_count{service_name="history"}[5m])) + sum(rate(shard_closed_count{service_name="history"}[5m])) > 0) unless (sum(increase(restarts{service_name="history"}[8m])) > 0)` |
-| 34b | 15m | `histogram_quantile(0.99, sum by (instance, task_category, le) (rate(shardinfo_immediate_queue_lag_bucket{service_name="history"}[5m]))) > 3000000` |
+| 34b | 15m | `histogram_quantile(0.99, sum by (instance, task_category, le) (rate(shardinfo_immediate_queue_lag_bucket{service_name="history"}[11m]))) > 3000000` |
 | 34f | 1m | `sum by (instance) (dd_current_suspected_deadlocks{service_name="history"}) > 0` |
 | 38 | 5m | `histogram_quantile(0.99, sum by (operation, le) (rate(shardinfo_scheduled_queue_lag_bucket{task_category="timer",service_name="history"}[5m]))) > 30` |
 | 57 | 1m | `sum by (namespace) (service_pending_requests{service_name="frontend",namespace!="_unknown_",operation=~"PollWorkflowTaskQueue\|PollActivityTaskQueue"}) == 0` |

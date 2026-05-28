@@ -807,7 +807,7 @@ groups:
             datasourceUid: Prometheus  # DATASOURCE — change to match your Prometheus datasource name or UID
             model:
               editorMode: code
-              expr: "histogram_quantile(0.99, sum by (instance, task_category, le) (rate(shardinfo_immediate_queue_lag_bucket{service_name=\"history\"}[5m])))"
+              expr: "histogram_quantile(0.99, sum by (instance, task_category, le) (rate(shardinfo_immediate_queue_lag_bucket{service_name=\"history\"}[11m])))"
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
@@ -851,7 +851,7 @@ groups:
             processed. Workers may report workflows created but no tasks dispatched.
 
             Immediate action:
-            1. Check DB Pool Refresh Failure Rate panel — if non-zero, fix DB connectivity first; the shard will self-recover within ~6 min of DB returning to healthy.
+            1. Check DB Pool Refresh Failure Rate panel — if non-zero, fix DB connectivity first; the shard recovers within seconds of DB stability (if still in the 5-min retry window) or ≤1 min (if shard dropped and awaiting controller re-acquisition).
             2. If DB is healthy: run tdbg history-host describe --host-address <pod> to list shard IDs, then tdbg shard describe --shard-id <ID> to find the one with frozen ack levels.
             3. Run tdbg shard close-shard --shard-id <ID> to force re-acquisition.
             4. If tdbg does not resolve: restart the history pod.

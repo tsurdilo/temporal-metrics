@@ -2430,7 +2430,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_immediate_queue_lag_bucket{service_name=\"history\"}[$__rate_interval])\n  )\n)",
+              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_immediate_queue_lag_bucket{service_name=\"history\"}[11m])\n  )\n)",
               "legendFormat": "{{instance}} \u2014 {{task_category}}",
               "refId": "A"
             }
@@ -2491,7 +2491,7 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_scheduled_queue_lag_bucket{service_name=\"history\"}[$__rate_interval])\n  )\n)",
+              "expr": "histogram_quantile($p,\n  sum by (instance, task_category, le) (\n    rate(shardinfo_scheduled_queue_lag_bucket{service_name=\"history\"}[11m])\n  )\n)",
               "legendFormat": "{{instance}} \u2014 {{task_category}}",
               "refId": "A"
             }
