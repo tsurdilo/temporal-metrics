@@ -413,7 +413,7 @@ These settings allow higher throughput or larger values on-prem than Cloud's def
 |---|---|---|---|
 | `frontend.namespaceRPS` | 2400 | 2,000 RPS (auto-scales up from there) | Namespaces sustaining close to 2,400 namespace RPS will hit Cloud's 2,000 floor until auto-scaling raises it. Monitor `service_errors_resource_exhausted` after migration. The 2,000 starting value can be increased via support ticket. |
 | `worker.schedulerNamespaceStartWorkflowRPS` | 30 | 10 schedule RPS | Cloud's schedule RPS cap is 3× lower than the on-prem default and does not auto-scale. Namespaces with >10 schedule starts/s will be throttled. Spread schedule start times using SDK jitter, or request a limit increase before migrating. |
-| `frontend.namespaceRPS.visibility` | 10 (but commonly raised) | 30 visibility RPS | If you have raised this above 30 on-prem, visibility `list*` calls will be throttled on Cloud. Cloud's cap (30) is higher than the on-prem default, so clusters that have not raised it are fine. The 30 RPS default can be increased via support ticket. |
+| `frontend.namespaceRPS.visibility` | 10 (but commonly raised) | 30 visibility RPS | If you have raised this above 30 on-prem, visibility `list*` calls will be throttled on Cloud. Cloud's cap (30) is higher than the on-prem default, so clusters that have not raised it are fine. The 30 RPS limit on Cloud is effectively fixed — increasing it is not supported. |
 
 ### Configs where on-prem is more restrictive than Cloud
 
