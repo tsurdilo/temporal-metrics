@@ -17,6 +17,7 @@
     - [System](#system-1)
     - [Limits](#limits)
     - [Worker](#worker-1)
+- [Configs That Require a Host Restart](#configs-that-require-a-host-restart)
 - [Preparing for Migration to Temporal Cloud](#preparing-for-migration-to-temporal-cloud)
 
 ---
@@ -368,6 +369,53 @@ These are the configs you should review and consciously set (or decide to leave 
 | `worker.perNamespaceWorkerCount` | 1 | Number of per-namespace workers (scheduler, batcher, etc.) running per namespace. Set to number of worker pods. |
 | `worker.perNamespaceWorkerOptions` | — | SDK worker options for per-namespace workers (e.g. `MaxConcurrentWorkflowTaskPollers`, `MaxConcurrentActivityTaskPollers`). Rule of thumb: 1 workflow task poller per 4 schedule RPS desired. |
 | `worker.schedulerNamespaceStartWorkflowRPS` | 30 | RPS limit for starting workflows from schedules, per namespace as a whole. Increase for high-schedule-volume namespaces. |
+
+---
+
+## Configs That Require a Host Restart
+
+Most dynamic config changes take effect without any restart — the server polls for config changes on a short interval. The settings below are exceptions: they are read once at process startup and cached for the lifetime of the process. Changing them in dynamic config has no effect until the relevant hosts are restarted.
+
+**Only the service whose hosts use the setting needs to be restarted.** Changing a `history.*` setting only requires rolling the history hosts; matching hosts and frontend hosts are unaffected, and vice versa. There is no need to restart the entire cluster.
+
+### History hosts
+
+| Config Key | Notes |
+|---|---|
+| `history.cacheSizeBasedLimit` | Switches the history cache between entry-count and byte-size limiting modes. |
+| `history.cacheTTL` | TTL for the history workflow execution cache. |
+| `history.cacheNonUserContextLockTimeout` | Timeout for acquiring workflow lock from non-user context. |
+| `history.hostLevelCacheMaxSize` | Max entry count for the host-level history cache. |
+| `history.hostLevelCacheMaxSizeBytes` | Max byte size for the host-level history cache (used when `cacheSizeBasedLimit=true`). |
+| `history.cacheBackgroundEvict` | Enables background goroutine for proactive cache eviction. Must be enabled at startup to activate the goroutine. |
+| `history.eventsCacheMaxSizeBytes` | Max byte size for the shard-level events cache. |
+| `history.eventsHostLevelCacheMaxSizeBytes` | Max byte size for the host-level events cache. |
+| `history.eventsCacheTTL` | TTL for the events cache. |
+| `history.enableHostLevelEventsCache` | Toggles host-level events cache on or off. |
+| `history.clientOwnershipCachingEnabled` | Enables caching of shard ownership in history clients. Only read when a history client is first created. |
+| `history.businessIDReuseLimiterCacheSize` | Cache size for the per-(namespace, businessID, archetype) start rate limiter. |
+| `history.businessIDReuseLimiterCacheTTL` | TTL for the business ID reuse rate limiter cache. |
+| `history.visibilityProcessorSchedulerWorkerCount` | Number of workers in the host-level task scheduler for the visibility queue processor. |
+
+### Matching hosts
+
+| Config Key | Notes |
+|---|---|
+| `matching.workerRegistryNumBuckets` | Number of buckets partitioning the worker registry keyspace for reduced lock contention. |
+| `matching.outstandingTaskAppendsThreshold` | Threshold for outstanding task appends before backpressure is applied. |
+
+### System (all hosts)
+
+| Config Key | Notes |
+|---|---|
+| `system.nexusReadThroughCacheSize` | Max entry count for the Nexus read-through cache. Requires restart on all hosts using the Nexus endpoint cache. |
+| `system.nexusReadThroughCacheTTL` | TTL for the Nexus read-through cache. Requires restart on all hosts using the Nexus endpoint cache. |
+
+### Worker hosts
+
+| Config Key | Notes |
+|---|---|
+| `worker.stickyCacheSize` | Size of the sticky workflow execution cache shared across all SDK workers in the process. Cannot be changed after startup. |
 
 ---
 
