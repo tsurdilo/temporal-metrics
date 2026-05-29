@@ -375,8 +375,6 @@ These are the configs you should review and consciously set (or decide to leave 
 
 Temporal Cloud enforces fixed limits on several dimensions that are configurable on self-hosted Temporal. This section maps Cloud limits to the on-prem dynamic configs that correspond to them, so you can verify your cluster is operating within Cloud's bounds before migrating.
 
-Limits that are Cloud-only and have no on-prem dynamic config equivalent (account-level namespace count, Actions Per Second, gRPC message size, Nexus endpoint count) are not listed here.
-
 ### Configs that already match Cloud defaults
 
 If these settings are at their defaults and your workloads operate within those defaults, no change is needed for migration.
