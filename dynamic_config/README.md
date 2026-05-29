@@ -379,7 +379,7 @@ Temporal Cloud enforces fixed limits on several dimensions that are configurable
 
 If these settings are at their defaults and your workloads operate within those defaults, no change is needed for migration.
 
-Most configs in this table are fixed on Cloud and cannot be changed even via support ticket. OSS users planning to migrate should not raise these values above their defaults — doing so means your workloads will break on Cloud.
+Most configs in this table are fixed on Cloud and cannot be changed even via support ticket. OSS users planning to migrate should not raise these values above their defaults — doing so might cause your workloads to break on Cloud.
 
 | On-prem config | Default | Cloud limit |
 |---|---|---|
