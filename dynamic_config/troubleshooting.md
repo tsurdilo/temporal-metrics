@@ -21,13 +21,13 @@
 - Persistence overloaded → adjust `frontend.persistenceMaxQPS`, `history.persistenceMaxQPS`, `matching.persistenceMaxQPS`
 
 ### History cache misses / memory pressure
-- Check `history.cacheMaxSize` (per-shard, default 512) and `history.hostLevelCacheMaxSize` (host-level, default 128K)
+- Check `history.hostLevelCacheMaxSize` (entry count, default 128K) or `history.hostLevelCacheMaxSizeBytes` (~1GB, when `cacheSizeBasedLimit=true`)
 - Enable `history.cacheBackgroundEvict` for proactive cleanup
 - Tune `history.cacheTTL` / `history.eventsCacheTTL` (default 1h)
 
 ### ES / Visibility indexing backlog
 - Reduce `history.visibilityProcessorMaxPollRPS` and `history.visibilityProcessorSchedulerWorkerCount` to throttle indexing speed
-- Set `history.visibilityTaskWorkerCount: 0` to fully pause indexing during reindex operations
+- Reduce `history.visibilityProcessorSchedulerWorkerCount` to `0` to fully pause indexing during reindex (set via dynamic config, **requires restart**)
 - Set `system.secondaryVisibilityWritingMode: dual` when migrating to ES
 
 ### Too many outstanding task appends
