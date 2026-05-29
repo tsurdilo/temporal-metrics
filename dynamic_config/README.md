@@ -429,29 +429,29 @@ If these settings are at their defaults and your workloads operate within those 
 
 Most configs in this table are fixed on Cloud and cannot be changed even via support ticket. OSS users planning to migrate should not raise these values above their defaults — doing so might cause your workloads to break on Cloud.
 
-| On-prem config | Default | Cloud limit |
-|---|---|---|
-| `limit.blobSize.error` | 2 MB | 2 MB per payload |
-| `system.transactionSizeLimit` | 4 MB | 4 MB event history transaction |
-| `limit.maxIDLength` | 1000 | 1,000 bytes for Workflow ID, Task Queue name, etc. — **exception: namespace names are capped at 59 characters on Cloud**, versus 1,000 on OSS |
-| `limit.numPendingActivities.error` | 2000 | 2,000 pending activities per Workflow Execution |
-| `limit.numPendingSignals.error` | 2000 | 2,000 pending signals per Workflow Execution |
-| `limit.numPendingChildExecutions.error` | 2000 | 2,000 pending child workflows per Workflow Execution |
-| `limit.numPendingCancelRequests.error` | 2000 | 2,000 pending cancel requests per Workflow Execution |
-| `history.maximumSignalsPerExecution` | 10,000 | 10,000 total signals per Workflow Execution |
-| `history.maxInFlightUpdates` | 10 | 10 in-flight updates per Workflow Execution |
-| `history.maxTotalUpdates` | 2000 | 2,000 total updates per Workflow Execution |
-| `limit.historySize.error` | 50 MB | 50 MB Event History size |
-| `limit.historySize.warn` | 10 MB | 10 MB Event History warn threshold |
-| `limit.historyCount.error` | 51,200 | 51,200 events (50×1024) |
-| `limit.historyCount.warn` | 10,240 | 10,240 events (10×1024) |
-| `frontend.MaxConcurrentBatchOperationPerNamespace` | 1 | 1 batch job running at a time per namespace |
-| `worker.batcherRPS` | 50 | 50 Workflow Executions per second per batch job |
-| `matching.maxDeployments` | 100 | 100 Worker Deployments per namespace |
-| `matching.maxVersionsInDeployment` | 100 | 100 versions per Worker Deployment |
-| `matching.maxTaskQueuesInDeploymentVersion` | 100 | 100 Task Queues per Worker Deployment Version |
-| `limit.historySize.suggestContinueAsNew` | 4 MB | 4 MB — fixed on Cloud, configurable on OSS |
-| `limit.historyCount.suggestContinueAsNew` | 4,096 | 4,096 events — fixed on Cloud, configurable on OSS |
+| On-prem config | Default | Cloud limit                                                                                                                                   |
+|---|---|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `limit.blobSize.error` | 2 MB | 2 MB per payload                                                                                                                              |
+| `system.transactionSizeLimit` | 4 MB | 4 MB event history transaction                                                                                                                |
+| `limit.maxIDLength` | 1000 | 1,000 bytes for Workflow ID, Task Queue name, etc. — **exception: namespace names are capped at 39 characters on Cloud**, versus 1,000 on OSS |
+| `limit.numPendingActivities.error` | 2000 | 2,000 pending activities per Workflow Execution                                                                                               |
+| `limit.numPendingSignals.error` | 2000 | 2,000 pending signals per Workflow Execution                                                                                                  |
+| `limit.numPendingChildExecutions.error` | 2000 | 2,000 pending child workflows per Workflow Execution                                                                                          |
+| `limit.numPendingCancelRequests.error` | 2000 | 2,000 pending cancel requests per Workflow Execution                                                                                          |
+| `history.maximumSignalsPerExecution` | 10,000 | 10,000 total signals per Workflow Execution                                                                                                   |
+| `history.maxInFlightUpdates` | 10 | 10 in-flight updates per Workflow Execution                                                                                                   |
+| `history.maxTotalUpdates` | 2000 | 2,000 total updates per Workflow Execution                                                                                                    |
+| `limit.historySize.error` | 50 MB | 50 MB Event History size                                                                                                                      |
+| `limit.historySize.warn` | 10 MB | 10 MB Event History warn threshold                                                                                                            |
+| `limit.historyCount.error` | 51,200 | 51,200 events (50×1024)                                                                                                                       |
+| `limit.historyCount.warn` | 10,240 | 10,240 events (10×1024)                                                                                                                       |
+| `frontend.MaxConcurrentBatchOperationPerNamespace` | 1 | 1 batch job running at a time per namespace                                                                                                   |
+| `worker.batcherRPS` | 50 | 50 Workflow Executions per second per batch job                                                                                               |
+| `matching.maxDeployments` | 100 | 100 Worker Deployments per namespace                                                                                                          |
+| `matching.maxVersionsInDeployment` | 100 | 100 versions per Worker Deployment                                                                                                            |
+| `matching.maxTaskQueuesInDeploymentVersion` | 100 | 100 Task Queues per Worker Deployment Version                                                                                                 |
+| `limit.historySize.suggestContinueAsNew` | 4 MB | 4 MB — fixed on Cloud, configurable on OSS                                                                                                    |
+| `limit.historyCount.suggestContinueAsNew` | 4,096 | 4,096 events — fixed on Cloud, configurable on OSS                                                                                            |
 
 ### Configs where on-prem default is more permissive than Cloud
 
